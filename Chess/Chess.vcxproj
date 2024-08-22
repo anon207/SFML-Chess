@@ -111,7 +111,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Build\lib\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>sfml-graphics-d.lib;sfml-system-d.lib;sfml-window-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>sfml-graphics-d.lib;sfml-system-d.lib;sfml-window-d.lib;sfml-audio-d.lib;libsndfile-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -131,20 +131,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bishop.cpp" />
+    <ClCompile Include="board.cpp" />
     <ClCompile Include="boardGraphics.cpp" />
     <ClCompile Include="chessPiece.cpp" />
+    <ClCompile Include="king.cpp" />
+    <ClCompile Include="knight.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="pawn.cpp" />
+    <ClCompile Include="queen.cpp" />
+    <ClCompile Include="rook.cpp" />
+    <ClCompile Include="square.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Bishop.hpp" />
+    <ClInclude Include="board.hpp" />
     <ClInclude Include="boardGraphics.hpp" />
     <ClInclude Include="chessPiece.hpp" />
+    <ClInclude Include="king.hpp" />
+    <ClInclude Include="knight.hpp" />
     <ClInclude Include="pawn.hpp" />
+    <ClInclude Include="queen.hpp" />
+    <ClInclude Include="rook.hpp" />
+    <ClInclude Include="square.hpp" />
   </ItemGroup>
   <ItemGroup>
     <Font Include="..\..\..\..\chess\Fonts\RobotoCondensed-Black.ttf" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="..\..\..\..\chess\pieceSprites\chess_pieces.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="move-self.wav" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

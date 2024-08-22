@@ -1,0 +1,17 @@
+#ifndef QUEEN_HPP
+#define QUEEN_HPP
+
+#include "chessPiece.hpp"
+
+class Queen : public ChessPiece {
+public:
+    // Constructors
+    Queen(const sf::Vector2i& pos, char col, const sf::Sprite& spr);
+
+    virtual ~Queen();
+
+    // Public functions
+    bool validateMove(const sf::Vector2i& moveToPosition) const;
+};
+
+#endif
