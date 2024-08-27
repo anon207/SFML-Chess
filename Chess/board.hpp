@@ -34,10 +34,9 @@ private:
     sf::Vector2i lastFromPos;
     sf::Vector2i lastToPos;
     // Sounds
-    sf::SoundBuffer buffer;
-    sf::Sound sound;
 
-
+    sf::SoundBuffer invalidMove;
+    sf::Sound invalidMoveSound;
 };
 
 #endif

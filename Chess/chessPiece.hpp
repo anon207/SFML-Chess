@@ -2,9 +2,13 @@
 #define CHESS_PIECE_HPP
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
+#include "square.hpp"
 
 class ChessPiece {
 public:
+    // variable used for castling the king.
+    bool hasMoved = false;
 
     // Constructors
     ChessPiece();
@@ -18,7 +22,9 @@ public:
     float getOffsetX() const;
     float getOffsetY() const;
     std::string getType() const;
-    virtual bool validateMove(const sf::Vector2i& moveToPosition) const = 0;
+    virtual bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const = 0;
+    bool const getHasMoved() const;
+    void setHasMoved(const bool moved);
 
     // Overloaded == operator
     friend bool operator==(const ChessPiece& lhs, const ChessPiece& rhs);
@@ -34,6 +40,18 @@ protected:
     // used for centering sprites in the board sqaures
     float offsetX;
     float offsetY;
+    // sounds
+    sf::SoundBuffer moveWhite;
+    sf::Sound moveWhiteSound;
+
+    sf::SoundBuffer moveBlack;
+    sf::Sound moveBlackSound;
+
+    sf::SoundBuffer castle;
+    sf::Sound castleSound;
+
+    sf::SoundBuffer capture;
+    sf::Sound captureSound;
 };
 
 

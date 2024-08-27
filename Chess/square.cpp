@@ -1,8 +1,8 @@
 #include "Square.hpp"
-#include "ChessPiece.hpp"
+//#include <cstddef>
 
 Square::Square() {
-    piece = NULL;
+    piece = nullptr;
 }
 
 Square::~Square() {
@@ -17,10 +17,5 @@ void Square::SetPiece(ChessPiece* p) {
 }
 
 void Square::Clear() {
-    piece = NULL;
+    piece = nullptr;
 }
-
-// Overloaded != operator
-//bool Square::operator!=(const Square& other) const {
-//    return (this->piece != other.piece);
-//}

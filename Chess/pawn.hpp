@@ -11,11 +11,7 @@ public:
     virtual ~Pawn();
 
     // Public functions
-    bool validateMove(const sf::Vector2i& moveToPosition) const;
-
-private:
-    // Indicates whether a double jump first move is available
-    bool doubleJumpAvailable;
+    bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const;
 };
 
 #endif

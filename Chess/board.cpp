@@ -8,9 +8,10 @@
 #include <iostream>
 
 Board::Board() : lastFromPos(-1, -1), lastToPos(-1, -1) {
-    buffer.loadFromFile("C:/Users/granb/source/repos/Chess/Chess/move-self.wav");
-    sound.setBuffer(buffer);
-    sound.setVolume(50);
+    invalidMove.loadFromFile("assets/incorrect.wav");
+    invalidMoveSound.setBuffer(invalidMove);
+    invalidMoveSound.setVolume(100);
+
     InitializePieces();
 }
 
@@ -18,19 +19,26 @@ Board::~Board() {
 }
 
 bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove) {
-
     bool moveCompleted = false;
 
     ChessPiece* origPiece = board[fromPos.x][fromPos.y].GetPiece();
+    ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
 
-    if (origPiece != NULL && ((origPiece->getColor() == 'W' && whitesMove == true) || ((origPiece->getColor() == 'B' && whitesMove == false))) && origPiece->validateMove(toPos) && fromPos != toPos) {
-        origPiece->setPosition(toPos);
-        if (board[toPos.x][toPos.y].GetPiece() != NULL) {
+    if (origPiece != NULL &&
+        ((origPiece->getColor() == 'W' && whitesMove == true) || (origPiece->getColor() == 'B' && whitesMove == false)) &&
+        origPiece->validateMove(toPos, board) && fromPos != toPos) {
+
+        // Check if the destination piece is of the same color
+        if (destPiece != NULL && destPiece->getColor() != origPiece->getColor()) {
             board[toPos.x][toPos.y].Clear();
         }
-        else {
-
+        else if (destPiece != NULL && destPiece->getColor() == origPiece->getColor()) {
+            // If the destination piece is the same color, it's an invalid move
+            invalidMoveSound.play();
+            return (moveCompleted);
         }
+
+        origPiece->setPosition(toPos);
         board[toPos.x][toPos.y].SetPiece(origPiece);
         board[fromPos.x][fromPos.y].Clear();
 
@@ -40,8 +48,9 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
         moveCompleted = true;
         whitesMove = !whitesMove;
     }
-    sound.play();
+
     if (!moveCompleted) {
+        invalidMoveSound.play();
         fromPos = sf::Vector2i(-1, -1);
     }
 
@@ -54,7 +63,7 @@ ChessPiece* Board::GetPiece(sf::Vector2i piecePos) {
 
 void Board::InitializePieces() {
     // Load texture
-    pieceTexture.loadFromFile("C:/Users/granb/source/repos/Chess/Chess/assets/chess_pieces.png");
+    pieceTexture.loadFromFile("assets/chess_pieces.png");
     
     // Initialize Pawns
     sf::Sprite WhitePawnSprite;

@@ -53,3 +53,11 @@ ChessPiece& ChessPiece::operator=(const ChessPiece& other) {
 
 	return *this;
 }
+
+bool const ChessPiece::getHasMoved() const {
+	return (hasMoved);
+}
+
+void ChessPiece::setHasMoved(const bool moved) {
+	hasMoved = moved;
+}

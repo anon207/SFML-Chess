@@ -3,8 +3,17 @@
 #include "chessPiece.hpp"
 #include <iostream>
 #include "board.hpp"
+#include <fstream>
+#include <SFML/Audio.hpp>
 
 int main() {
+    sf::SoundBuffer gameStart;
+    sf::Sound gameStartSound;
+    gameStart.loadFromFile("assets/game-start.wav");
+    gameStartSound.setBuffer(gameStart);
+    gameStartSound.setVolume(100);
+    gameStartSound.play();
+
     sf::RenderWindow window(sf::VideoMode(800, 800), "Chessboard");
 
     Board board;
@@ -12,7 +21,7 @@ int main() {
     bool whitesMove = true;
 
     sf::Font font;
-    font.loadFromFile("C:/Users/granb/source/repos/Chess/Chess/assets/RobotoCondensed-Black.ttf");
+    font.loadFromFile("assets/RobotoCondensed-Black.ttf");
 
     const int squareSize = 100;
 

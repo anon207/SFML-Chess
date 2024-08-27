@@ -11,7 +11,7 @@ public:
     virtual ~Queen();
 
     // Public functions
-    bool validateMove(const sf::Vector2i& moveToPosition) const;
+    bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const;
 };
 
 #endif
