@@ -46,9 +46,11 @@ bool Bishop::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x + i == position.x && moveToPosition.y + i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x + i == position.x && moveToPosition.y + i == position.y);
 	}
 
@@ -61,9 +63,11 @@ bool Bishop::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x + i == position.x && moveToPosition.y - i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x + i == position.x && moveToPosition.y - i == position.y);
 	}
 
@@ -76,9 +80,11 @@ bool Bishop::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if(moveToPosition.x - i == position.x && moveToPosition.y + i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x - i == position.x && moveToPosition.y + i == position.y);
 	}
 
@@ -91,9 +97,11 @@ bool Bishop::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x - i == position.x && moveToPosition.y - i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x - i == position.x && moveToPosition.y - i == position.y);
 	}
 

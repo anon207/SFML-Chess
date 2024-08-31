@@ -48,7 +48,7 @@ int main() {
                     }
                     else {
                         // Second click: Attempt to move the piece
-                        if (board.MovePiece(selectedPiece, boardPosition, whitesMove)) {
+                        if (board.MovePiece(selectedPiece, boardPosition, whitesMove, window)) {
                             selectedPiece = sf::Vector2i(-1, -1); // Reset selection after move
                         }
                     }

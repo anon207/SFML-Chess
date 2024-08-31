@@ -1,4 +1,5 @@
 #include "queen.hpp"
+#include <iostream>
 
 // Constructors
 Queen::Queen(const sf::Vector2i& pos, char col, const sf::Sprite& spr) {
@@ -106,9 +107,11 @@ bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x + i == position.x && moveToPosition.y + i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x + i == position.x && moveToPosition.y + i == position.y);
 	}
 
@@ -121,9 +124,11 @@ bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x + i == position.x && moveToPosition.y - i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x + i == position.x && moveToPosition.y - i == position.y);
 	}
 
@@ -131,14 +136,17 @@ bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8
 	if (moveToPosition.x > position.x && moveToPosition.y < position.y) {
 		int i = 1;
 		while (moveToPosition.x - i > position.x && moveToPosition.y + i < position.y) {
+			std::cout << moveToPosition.x - i << std::endl;
 			if (board[moveToPosition.x - i][moveToPosition.y + i].GetPiece() != NULL) {
 				return (false);
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x - i == position.x && moveToPosition.y + i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x - i == position.x && moveToPosition.y + i == position.y);
 	}
 
@@ -151,9 +159,11 @@ bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		if (moveToPosition.x - i == position.x && moveToPosition.y - i == position.y) {
+			if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
+			if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
+			if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
+		}
 		return (moveToPosition.x - i == position.x && moveToPosition.y - i == position.y);
 	}
 

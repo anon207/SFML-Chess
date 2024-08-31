@@ -61,3 +61,21 @@ bool const ChessPiece::getHasMoved() const {
 void ChessPiece::setHasMoved(const bool moved) {
 	hasMoved = moved;
 }
+
+bool const ChessPiece::getLastMoved() const {
+	return (lastMoved);
+}
+void ChessPiece::setLastMoved(const bool last) {
+	lastMoved = last;
+}
+
+int const ChessPiece::getSquaresMoved() const {
+	return (squaresMoved);
+}
+bool ChessPiece::getJustDoubleJumped() const {
+	return (justDoubleJumped);
+}
+
+void ChessPiece::setJustDoubleJumped(const bool just) {
+	justDoubleJumped = just;
+}

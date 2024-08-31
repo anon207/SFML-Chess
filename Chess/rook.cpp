@@ -104,6 +104,7 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
 		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;
+		//std::cout << "SKIBITY" << std::endl;
 		return (true);
 	}
 

@@ -7,9 +7,6 @@
 
 class ChessPiece {
 public:
-    // variable used for castling the king.
-    bool hasMoved = false;
-
     // Constructors
     ChessPiece();
     virtual ~ChessPiece();
@@ -25,6 +22,11 @@ public:
     virtual bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const = 0;
     bool const getHasMoved() const;
     void setHasMoved(const bool moved);
+    bool const getLastMoved() const;
+    void setLastMoved(const bool last);
+    int const getSquaresMoved() const;
+    bool getJustDoubleJumped() const;
+    void setJustDoubleJumped(const bool just);
 
     // Overloaded == operator
     friend bool operator==(const ChessPiece& lhs, const ChessPiece& rhs);
@@ -52,6 +54,15 @@ protected:
 
     sf::SoundBuffer capture;
     sf::Sound captureSound;
+
+    // variable used for castling the king.
+    bool hasMoved = false;
+    // variables for en passant
+    mutable bool lastMoved = false;
+    mutable bool justDoubleJumped = false;
+    mutable int squaresMoved = 0;
+    
+
 };
 
 
