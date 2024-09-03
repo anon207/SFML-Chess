@@ -34,20 +34,18 @@ std::string ChessPiece::getType() const {
 }
 
 bool operator==(const ChessPiece& lhs, const ChessPiece& rhs) {
-	//sf::Vector2i pos(lhs.position.y, lhs.position.x);
 	return (lhs.position == rhs.position &&
 		lhs.color == rhs.color &&
 		std::string(lhs.type) == std::string(rhs.type));
 }
 
 ChessPiece& ChessPiece::operator=(const ChessPiece& other) {
-	if (this == &other) return *this; // Self-assignment check
+	if (this == &other) return *this;
 
-	// Copy the attributes
 	position = other.position;
 	sprite = other.sprite;
 	color = other.color;
-	type = other.type; // No need for manual memory management with std::string
+	type = other.type;
 	offsetX = other.offsetX;
 	offsetY = other.offsetY;
 

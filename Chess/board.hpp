@@ -1,7 +1,7 @@
 #ifndef BOARD_H
 #define	BOARD_H
 
-#include "Square.hpp"
+#include "square.hpp"
 #include "ChessPiece.hpp"
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
@@ -21,7 +21,10 @@ public:
     bool MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window);
     ChessPiece* GetPiece(sf::Vector2i piecePos);
     sf::Vector2i GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth);
-    
+    Square(&getBoard())[8][8];
+    bool checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vector2i& toPos, sf::Vector2i& fromPos, bool& whitesMove);
+    bool isKingInCheck(bool whitesMove);
+    bool checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted);
     // Graphical board display
     void drawBoard(sf::RenderWindow& window);
 
@@ -49,6 +52,21 @@ private:
 
     sf::SoundBuffer promote;
     sf::Sound promoteSound;
+
+    sf::SoundBuffer moveWhite;
+    sf::Sound moveWhiteSound;
+
+    sf::SoundBuffer moveBlack;
+    sf::Sound moveBlackSound;
+
+    sf::SoundBuffer capture;
+    sf::Sound captureSound;
+
+    sf::SoundBuffer castle;
+    sf::Sound castleSound;
+    
+    sf::SoundBuffer check;
+    sf::Sound checkSound;
 };
 
 #endif

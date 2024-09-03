@@ -16,6 +16,26 @@ Board::Board() : lastFromPos(-1, -1), lastToPos(-1, -1) {
     promoteSound.setBuffer(promote);
     promoteSound.setVolume(100);
 
+    moveWhite.loadFromFile("assets/move-self.wav");
+    moveWhiteSound.setBuffer(moveWhite);
+    moveWhiteSound.setVolume(100);
+
+    moveBlack.loadFromFile("assets/move-opponent.wav");
+    moveBlackSound.setBuffer(moveBlack);
+    moveBlackSound.setVolume(100);
+
+    capture.loadFromFile("assets/capture.wav");
+    captureSound.setBuffer(capture);
+    captureSound.setVolume(100);
+
+    castle.loadFromFile("assets/castle.wav");
+    castleSound.setBuffer(castle);
+    castleSound.setVolume(100);
+
+    check.loadFromFile("assets/move-check.wav");
+    checkSound.setBuffer(check);
+    checkSound.setVolume(100);
+
     InitializePieces();
 }
 
@@ -136,10 +156,11 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
         if (selectedPiece != nullptr) {
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
+            promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
-
+        updateLastMovedPiece(selectedPiece);
         // Close the promotion window after a piece is selected
         return (moveCompleted);
     }
@@ -259,10 +280,12 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
         if (selectedPiece != nullptr) {
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
+            promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
 
+        updateLastMovedPiece(selectedPiece);
         // Close the promotion window after a piece is selected
         return (moveCompleted);
     }
@@ -288,6 +311,8 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             whitesMove = !whitesMove;
             lastFromPos = fromPos;
             lastToPos = sf::Vector2i(7, 7);
+            castleSound.play();
+            updateLastMovedPiece(origPiece);
             return (true);
         }
         // Queen-side castling
@@ -300,6 +325,8 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             whitesMove = !whitesMove;
             lastFromPos = fromPos;
             lastToPos = sf::Vector2i(7, 0);
+            castleSound.play();
+            updateLastMovedPiece(origPiece);
             return (true);
         }
     }
@@ -316,6 +343,8 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             whitesMove = !whitesMove;
             lastFromPos = fromPos;
             lastToPos = sf::Vector2i(0, 7);
+            castleSound.play();
+            updateLastMovedPiece(origPiece);
             return (true);
         }
         // Queen-side castling
@@ -328,10 +357,49 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             whitesMove = !whitesMove;
             lastFromPos = fromPos;
             lastToPos = sf::Vector2i(0, 0);
+            castleSound.play();
+            updateLastMovedPiece(origPiece);
             return (true);
         }
     }
     return (false);
+}
+
+bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vector2i& toPos, sf::Vector2i& fromPos, bool& whitesMove) {
+    if (destPiece == NULL &&
+        (origPiece->getColor() == 'W' &&
+            toPos.x == origPiece->getPosition().x - 1 &&
+            board[toPos.x + 1][toPos.y].GetPiece() != NULL &&
+            board[toPos.x + 1][toPos.y].GetPiece()->getType() == "P" &&
+            board[toPos.x + 1][toPos.y].GetPiece()->getColor() != origPiece->getColor() &&
+            board[toPos.x + 1][toPos.y].GetPiece()->getLastMoved() == true &&
+            board[toPos.x + 1][toPos.y].GetPiece()->getJustDoubleJumped() &&
+            board[toPos.x + 1][toPos.y].GetPiece()->getSquaresMoved() == 2) ||
+        (origPiece->getColor() == 'B' &&
+            toPos.x == origPiece->getPosition().x + 1 &&
+            board[toPos.x - 1][toPos.y].GetPiece() != NULL &&
+            board[toPos.x - 1][toPos.y].GetPiece()->getType() == "P" &&
+            board[toPos.x - 1][toPos.y].GetPiece()->getColor() != origPiece->getColor() &&
+            board[toPos.x - 1][toPos.y].GetPiece()->getLastMoved() == true &&
+            board[toPos.x - 1][toPos.y].GetPiece()->getJustDoubleJumped() &&
+            board[toPos.x - 1][toPos.y].GetPiece()->getSquaresMoved() == 2)) {
+
+        if (origPiece->getColor() == 'W') board[toPos.x + 1][toPos.y].Clear();
+
+        if (origPiece->getColor() == 'B') board[toPos.x - 1][toPos.y].Clear();
+
+        board[toPos.x][toPos.y].SetPiece(origPiece);
+        board[origPiece->getPosition().x][origPiece->getPosition().y].Clear();
+        origPiece->setPosition(toPos);
+        origPiece->setLastMoved(true);
+
+        lastFromPos = fromPos;
+        lastToPos = toPos;
+        whitesMove = !whitesMove;
+        const_cast<sf::Sound&>(captureSound).play();
+
+        return (true);
+    }
 }
 
 void Board::updateLastMovedPiece(ChessPiece* origPiece) {
@@ -348,26 +416,32 @@ void Board::updateLastMovedPiece(ChessPiece* origPiece) {
     origPiece->setLastMoved(true);
 }
 
-bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window) {
-    bool moveCompleted = false;
-
-    ChessPiece* origPiece = board[fromPos.x][fromPos.y].GetPiece();
-    ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
-
-    // Check for castling
-    if (checkCastle(origPiece, whitesMove, toPos, fromPos, lastToPos, lastFromPos)) return (true);
-
-    if (checkPromotionWhite(origPiece, whitesMove, fromPos, toPos, window, moveCompleted) || checkPromotionBlack(origPiece, whitesMove, fromPos, toPos, window, moveCompleted)) {
-        promoteSound.play();
-        return (true);
+bool Board::isKingInCheck(bool whitesMove) {
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            // After white makes a valid move check if black king is in check
+            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
+                if (piece->canPieceSeeTheKing(board)) return (true);
+            }
+            // After black makes a valid move check if white king is in check
+            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
+                if (piece->canPieceSeeTheKing(board)) return (true);
+            }
+        }
     }
+    return (false);
+}
 
+bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted) {
+    bool playCaptureSound = false;
     if (origPiece != nullptr &&
-        ((origPiece->getColor() == 'W' && whitesMove == true) || (origPiece->getColor() == 'B' && whitesMove == false)) &&
+        ((origPiece->getColor() == 'W' && whitesMove) || (origPiece->getColor() == 'B' && !whitesMove)) &&
         fromPos != toPos && origPiece->validateMove(toPos, board)) {
 
         if (destPiece != nullptr && destPiece->getColor() != origPiece->getColor()) {
             board[toPos.x][toPos.y].Clear();
+            playCaptureSound = true;
         }
         else if (destPiece != nullptr && destPiece->getColor() == origPiece->getColor()) {
             invalidMoveSound.play();
@@ -377,8 +451,20 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
         origPiece->setPosition(toPos);
         board[toPos.x][toPos.y].SetPiece(origPiece);
         board[fromPos.x][fromPos.y].Clear();
-        
+
         updateLastMovedPiece(origPiece);
+
+        if (isKingInCheck(whitesMove)) {
+            checkSound.play();
+        }
+        else if (playCaptureSound) {
+            captureSound.play();
+        }
+        else
+        {
+            if (origPiece->getColor() == 'W') moveWhiteSound.play();
+            if (origPiece->getColor() == 'B') moveBlackSound.play();
+        }
 
         lastFromPos = fromPos;
         lastToPos = toPos;
@@ -391,6 +477,27 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
         invalidMoveSound.play();
         fromPos = sf::Vector2i(-1, -1);
     }
+    return (moveCompleted);
+}
+
+bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window) {
+    bool moveCompleted = false;
+
+    ChessPiece* origPiece = board[fromPos.x][fromPos.y].GetPiece();
+    ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
+
+    // Check for castling
+    if (checkCastle(origPiece, whitesMove, toPos, fromPos, lastToPos, lastFromPos)) return (true);
+
+    // Check for pawn promotion
+    if (checkPromotionWhite(origPiece, whitesMove, fromPos, toPos, window, moveCompleted) || 
+        checkPromotionBlack(origPiece, whitesMove, fromPos, toPos, window, moveCompleted)) return (true);
+
+    // Check for en passant
+    if (checkEnPassant(origPiece, destPiece, toPos, fromPos, whitesMove)) return (true);
+    
+    // Check for any other move
+    moveCompleted = checkNormalMove(origPiece, destPiece, whitesMove, fromPos, toPos, moveCompleted);
 
     return (moveCompleted);
 }
@@ -493,6 +600,10 @@ sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int wind
     int row = mousePosition.y / cellSize;
 
     return sf::Vector2i(row, col);
+}
+
+Square(&Board::getBoard())[8][8]{
+    return (board);
 }
 
 // Graphical display

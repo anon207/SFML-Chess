@@ -13,6 +13,7 @@ public:
     // Public functions
     bool const getHasMoved() const;
     bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const;
+    bool canPieceSeeTheKing(Square(&board)[8][8]) const;
 private:
     mutable bool hasMoved;
 };

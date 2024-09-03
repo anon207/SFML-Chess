@@ -10,22 +10,6 @@ Rook::Rook(const sf::Vector2i& pos, char col, const sf::Sprite& spr) {
 	offsetY = 3;
 	hasMoved = false;
 	type = "R";
-
-	moveWhite.loadFromFile("assets/move-self.wav");
-	moveWhiteSound.setBuffer(moveWhite);
-	moveWhiteSound.setVolume(100);
-
-	moveBlack.loadFromFile("assets/move-opponent.wav");
-	moveBlackSound.setBuffer(moveBlack);
-	moveBlackSound.setVolume(100);
-
-	castle.loadFromFile("assets/castle.wav");
-	castleSound.setBuffer(castle);
-	castleSound.setVolume(100);
-
-	capture.loadFromFile("assets/capture.wav");
-	captureSound.setBuffer(capture);
-	captureSound.setVolume(100);
 }
 
 Rook::~Rook() {
@@ -52,9 +36,6 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;
 		return (true);
 	}
@@ -68,9 +49,6 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;
 		return (true);
 	}
@@ -84,9 +62,6 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;
 		return (true);
 	}
@@ -100,13 +75,46 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 			}
 			i++;
 		}
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;
-		//std::cout << "SKIBITY" << std::endl;
 		return (true);
 	}
 
+	return (false);
+}
+
+bool Rook::canPieceSeeTheKing(Square(&board)[8][8]) const {
+	// Check if the Rook can see the king above it
+	int i = 1;
+	while (position.x - i >= 0) {
+		ChessPiece* otherPiece = board[position.x - i][position.y].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() != "K") break;
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		std::cout << position.x - i << " " << std::endl;
+		i++;
+	}
+	// Check if the Rook can see the king below it
+	i = 1;
+	while (position.x + i <= 7) {
+		ChessPiece* otherPiece = board[position.x + i][position.y].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() != "K") break;
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		i++;
+	}
+	// Check if the Rook can see the king to the left of it
+	i = 1;
+	while (position.y - i >= 0) {
+		ChessPiece* otherPiece = board[position.x][position.y - i].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() != "K") break;
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		i++;
+	}
+	// Check if the Rook can see the king to the right of it
+	i = 1;
+	while (position.y + i <= 7) {
+		ChessPiece* otherPiece = board[position.x][position.y + i].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() != "K") break;
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		i++;
+	}
 	return (false);
 }

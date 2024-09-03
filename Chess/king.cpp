@@ -10,22 +10,6 @@ King::King(const sf::Vector2i& pos, char col, const sf::Sprite& spr) {
 	offsetY = 4;
 	hasMoved = false;
 	type = "K";
-
-	moveWhite.loadFromFile("assets/move-self.wav");
-	moveWhiteSound.setBuffer(moveWhite);
-	moveWhiteSound.setVolume(100);
-
-	moveBlack.loadFromFile("assets/move-opponent.wav");
-	moveBlackSound.setBuffer(moveBlack);
-	moveBlackSound.setVolume(100);
-
-	castle.loadFromFile("assets/castle.wav");
-	castleSound.setBuffer(castle);
-	castleSound.setVolume(100);
-
-	capture.loadFromFile("assets/capture.wav");
-	captureSound.setBuffer(capture);
-	captureSound.setVolume(100);
 }
 
 King::~King() {
@@ -41,65 +25,41 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 
 	// Moving king up
 	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king down
 	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y) { 
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king left
 	if (moveToPosition.x == position.x && moveToPosition.y == position.y - 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king right
 	if (moveToPosition.x == position.x && moveToPosition.y == position.y + 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king up + left
 	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y - 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king up + right
 	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y + 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king down + left
 	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y - 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
 	// Moving king down + right
 	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y + 1) {
-		if (piece->getColor() == 'W' && otherPiece == NULL) const_cast<sf::Sound&>(moveWhiteSound).play();
-		if (piece->getColor() == 'B' && otherPiece == NULL) const_cast<sf::Sound&>(moveBlackSound).play();
-		if (otherPiece != NULL) const_cast<sf::Sound&>(captureSound).play();
 		hasMoved = true;  
 		return (true); 
 	}
@@ -125,8 +85,6 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 		board[7][6].GetPiece()->setHasMoved(true);
 		board[7][5].GetPiece()->setPosition(sf::Vector2i(7, 5));
 		board[7][6].GetPiece()->setPosition(sf::Vector2i(7, 6));
-
-		const_cast<sf::Sound&>(castleSound).play();
 		
 		return (true);
 	}
@@ -154,8 +112,6 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 		board[7][3].GetPiece()->setPosition(sf::Vector2i(7, 3));
 		board[7][2].GetPiece()->setPosition(sf::Vector2i(7, 2));
 
-		const_cast<sf::Sound&>(castleSound).play();
-
 		return (true);
 	}
 	
@@ -180,8 +136,6 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 		board[0][6].GetPiece()->setHasMoved(true);
 		board[0][5].GetPiece()->setPosition(sf::Vector2i(0, 5));
 		board[0][6].GetPiece()->setPosition(sf::Vector2i(0, 6));
-
-		const_cast<sf::Sound&>(castleSound).play();
 
 		return (true);
 	}
@@ -209,10 +163,12 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 		board[0][3].GetPiece()->setPosition(sf::Vector2i(0, 3));
 		board[0][2].GetPiece()->setPosition(sf::Vector2i(0, 2));
 
-		const_cast<sf::Sound&>(castleSound).play();
-
 		return (true);
 	}
 
+	return (false);
+}
+
+bool King::canPieceSeeTheKing(Square(&board)[8][8]) const {
 	return (false);
 }

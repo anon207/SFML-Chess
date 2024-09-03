@@ -27,6 +27,7 @@ public:
     int const getSquaresMoved() const;
     bool getJustDoubleJumped() const;
     void setJustDoubleJumped(const bool just);
+    virtual bool canPieceSeeTheKing(Square(&board)[8][8]) const = 0;
 
     // Overloaded == operator
     friend bool operator==(const ChessPiece& lhs, const ChessPiece& rhs);
@@ -37,26 +38,16 @@ public:
 protected:
     sf::Vector2i position;
     sf::Sprite sprite;
-    char color;
     std::string type;
+    char color;
+
     // used for centering sprites in the board sqaures
     float offsetX;
     float offsetY;
-    // sounds
-    sf::SoundBuffer moveWhite;
-    sf::Sound moveWhiteSound;
-
-    sf::SoundBuffer moveBlack;
-    sf::Sound moveBlackSound;
-
-    sf::SoundBuffer castle;
-    sf::Sound castleSound;
-
-    sf::SoundBuffer capture;
-    sf::Sound captureSound;
 
     // variable used for castling the king.
     bool hasMoved = false;
+
     // variables for en passant
     mutable bool lastMoved = false;
     mutable bool justDoubleJumped = false;
