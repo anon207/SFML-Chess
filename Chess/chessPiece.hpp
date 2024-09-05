@@ -4,6 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include "square.hpp"
+#include <string>
+#include <unordered_map>
+#include "board.hpp"
 
 class ChessPiece {
 public:
@@ -19,7 +22,7 @@ public:
     float getOffsetX() const;
     float getOffsetY() const;
     std::string getType() const;
-    virtual bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const = 0;
+    virtual bool validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const = 0;
     bool const getHasMoved() const;
     void setHasMoved(const bool moved);
     bool const getLastMoved() const;
@@ -28,6 +31,7 @@ public:
     bool getJustDoubleJumped() const;
     void setJustDoubleJumped(const bool just);
     virtual bool canPieceSeeTheKing(Square(&board)[8][8]) const = 0;
+    virtual void allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const = 0;
 
     // Overloaded == operator
     friend bool operator==(const ChessPiece& lhs, const ChessPiece& rhs);

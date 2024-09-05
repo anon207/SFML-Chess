@@ -6,6 +6,8 @@
 #include <SFML/Graphics.hpp>
 #include <SFML/Audio.hpp>
 #include <windows.h>
+#include <unordered_map>
+#include <string>
 
 class Board {
 public:
@@ -14,17 +16,21 @@ public:
     virtual ~Board();
 
     // Public Functions
-    bool checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted);
-    bool checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted);
-    bool checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& toPos, sf::Vector2i& fromPos, sf::Vector2i& lastToPos, sf::Vector2i& lastFromPos);
-    void updateLastMovedPiece(ChessPiece* origPiece);
+    bool checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
+    bool checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
+    bool checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& toPos, sf::Vector2i& fromPos, sf::Vector2i& lastToPos, sf::Vector2i& lastFromPos, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
+    bool checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vector2i& toPos, sf::Vector2i& fromPos, bool& whitesMove);
+    bool checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
     bool MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window);
+    static bool isKingInCheck(bool whitesMove, Square(&board)[8][8]);
+    
+    std::unordered_map<std::string, std::vector<sf::Vector2i>> getLegalMoves(bool whitesMove);
+    void updateLastMovedPiece(ChessPiece* origPiece);
     ChessPiece* GetPiece(sf::Vector2i piecePos);
     sf::Vector2i GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth);
     Square(&getBoard())[8][8];
-    bool checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vector2i& toPos, sf::Vector2i& fromPos, bool& whitesMove);
-    bool isKingInCheck(bool whitesMove);
-    bool checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted);
+
+    
     // Graphical board display
     void drawBoard(sf::RenderWindow& window);
 
@@ -67,6 +73,9 @@ private:
     
     sf::SoundBuffer check;
     sf::Sound checkSound;
+
+    sf::SoundBuffer china;
+    sf::Sound chinaSound;
 };
 
 #endif

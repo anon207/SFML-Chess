@@ -16,153 +16,16 @@ King::~King() {
 }
 
 // Public functions
-bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const {
-	ChessPiece* piece = board[position.x][position.y].GetPiece();
-	ChessPiece* otherPiece = board[moveToPosition.x][moveToPosition.y].GetPiece();
-
-	// Cant take same color piece
-	if (otherPiece != NULL && otherPiece->getColor() == piece->getColor() && otherPiece->getType() != "R") return (false);
-
-	// Moving king up
-	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king down
-	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y) { 
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king left
-	if (moveToPosition.x == position.x && moveToPosition.y == position.y - 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king right
-	if (moveToPosition.x == position.x && moveToPosition.y == position.y + 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king up + left
-	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y - 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king up + right
-	if (moveToPosition.x == position.x - 1 && moveToPosition.y == position.y + 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king down + left
-	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y - 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-	// Moving king down + right
-	if (moveToPosition.x == position.x + 1 && moveToPosition.y == position.y + 1) {
-		hasMoved = true;  
-		return (true); 
-	}
-
-	// Castle king side for white
-	if(piece->getColor() == 'W' && 
-		hasMoved == false && 
-		board[7][7].GetPiece() != NULL &&
-		board[7][7].GetPiece()->getType() == "R" && 
-		board[7][7].GetPiece()->getColor() == 'W' &&
-		!board[7][7].GetPiece()->getHasMoved() &&
-		board[7][6].GetPiece() == NULL && 
-		board[7][5].GetPiece() == NULL &&
-		moveToPosition.x == 7 && 
-		(moveToPosition.y == 6 || moveToPosition.y == 7)) {
-
-		board[7][5].SetPiece(board[7][7].GetPiece());
-		board[7][7].Clear();
-		board[7][6].SetPiece(board[7][4].GetPiece());
-		board[7][4].Clear();
-
-		board[7][5].GetPiece()->setHasMoved(true);
-		board[7][6].GetPiece()->setHasMoved(true);
-		board[7][5].GetPiece()->setPosition(sf::Vector2i(7, 5));
-		board[7][6].GetPiece()->setPosition(sf::Vector2i(7, 6));
-		
-		return (true);
-	}
-
-	// Castle queen side for white
-	if (piece->getColor() == 'W' &&
-		hasMoved == false &&
-		board[7][0].GetPiece() != NULL &&
-		board[7][0].GetPiece()->getType() == "R" &&
-		board[7][0].GetPiece()->getColor() == 'W' &&
-		!board[7][0].GetPiece()->getHasMoved() &&
-		board[7][1].GetPiece() == NULL &&
-		board[7][2].GetPiece() == NULL &&
-		board[7][3].GetPiece() == NULL &&
-		moveToPosition.x == 7 &&
-		(moveToPosition.y == 2 || moveToPosition.y == 1 || moveToPosition.y == 0)) {
-
-		board[7][3].SetPiece(board[7][0].GetPiece());
-		board[7][0].Clear();
-		board[7][2].SetPiece(board[7][4].GetPiece());
-		board[7][4].Clear();
-
-		board[7][3].GetPiece()->setHasMoved(true);
-		board[7][2].GetPiece()->setHasMoved(true);
-		board[7][3].GetPiece()->setPosition(sf::Vector2i(7, 3));
-		board[7][2].GetPiece()->setPosition(sf::Vector2i(7, 2));
-
-		return (true);
-	}
+bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
-	// Castle king side for Black
-	if (piece->getColor() == 'B' &&
-		hasMoved == false &&
-		board[0][7].GetPiece() != NULL &&
-		board[0][7].GetPiece()->getType() == "R" &&
-		board[0][7].GetPiece()->getColor() == 'B' &&
-		!board[0][7].GetPiece()->getHasMoved() &&
-		board[0][6].GetPiece() == NULL &&
-		board[0][5].GetPiece() == NULL &&
-		moveToPosition.x == 0 &&
-		(moveToPosition.y == 6 || moveToPosition.y == 7)) {
+	if (legalMoves["K"].empty()) return (false);
 
-		board[0][5].SetPiece(board[0][7].GetPiece());
-		board[0][7].Clear();
-		board[0][6].SetPiece(board[0][4].GetPiece());
-		board[0][4].Clear();
+	const std::vector<sf::Vector2i>& kingMoves = legalMoves["K"];
 
-		board[0][5].GetPiece()->setHasMoved(true);
-		board[0][6].GetPiece()->setHasMoved(true);
-		board[0][5].GetPiece()->setPosition(sf::Vector2i(0, 5));
-		board[0][6].GetPiece()->setPosition(sf::Vector2i(0, 6));
+	auto it = std::find(kingMoves.begin(), kingMoves.end(), moveToPosition);
 
-		return (true);
-	}
-
-	// Castle queen side for black
-	if (piece->getColor() == 'B' &&
-		hasMoved == false &&
-		board[0][0].GetPiece() != NULL &&
-		board[0][0].GetPiece()->getType() == "R" &&
-		board[0][0].GetPiece()->getColor() == 'B' &&
-		!board[0][0].GetPiece()->getHasMoved() &&
-		board[0][1].GetPiece() == NULL &&
-		board[0][2].GetPiece() == NULL &&
-		board[0][3].GetPiece() == NULL &&
-		moveToPosition.x == 0 &&
-		(moveToPosition.y == 2 || moveToPosition.y == 1 || moveToPosition.y == 0)) {
-
-		board[0][3].SetPiece(board[0][0].GetPiece());
-		board[0][0].Clear();
-		board[0][2].SetPiece(board[0][4].GetPiece());
-		board[0][4].Clear();
-
-		board[0][3].GetPiece()->setHasMoved(true);
-		board[0][2].GetPiece()->setHasMoved(true);
-		board[0][3].GetPiece()->setPosition(sf::Vector2i(0, 3));
-		board[0][2].GetPiece()->setPosition(sf::Vector2i(0, 2));
-
+	if (it != kingMoves.end()) {
+		hasMoved = true;
 		return (true);
 	}
 
@@ -171,4 +34,112 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 
 bool King::canPieceSeeTheKing(Square(&board)[8][8]) const {
 	return (false);
+}
+
+void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
+	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
+	// Moving king up
+	if (position.x != 0) {
+		ChessPiece* pieceAbove = board[position.x - 1][position.y].GetPiece();
+		if (pieceAbove == NULL || (pieceAbove != NULL && pieceAbove->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x - 1][position.y].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x - 1][position.y].SetPiece(pieceAbove);
+		}
+	}
+	// Moving king down
+	if (position.x != 7) {
+		ChessPiece* pieceBelow = board[position.x + 1][position.y].GetPiece();
+		if (pieceBelow == NULL || (pieceBelow != NULL && pieceBelow->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x + 1][position.y].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x + 1][position.y].SetPiece(pieceBelow);
+		}
+	}
+	// Moving king left
+	if (position.y != 0) {
+		ChessPiece* pieceLeft = board[position.x][position.y - 1].GetPiece();
+		if (pieceLeft == NULL || (pieceLeft != NULL && pieceLeft->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x][position.y - 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x, position.y - 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x][position.y - 1].SetPiece(pieceLeft);
+		}
+	}
+	// Moving king right
+	if (position.y != 7) {
+		ChessPiece* pieceRight = board[position.x][position.y + 1].GetPiece();
+		if (pieceRight == NULL || (pieceRight != NULL && pieceRight->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x][position.y + 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x, position.y + 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x][position.y + 1].SetPiece(pieceRight);
+		}
+	}
+	// Move king up and right
+	if (position.x != 0 && position.y != 7) {
+		ChessPiece* pieceAboveRight = board[position.x - 1][position.y + 1].GetPiece();
+		if (pieceAboveRight == NULL || (pieceAboveRight != NULL && pieceAboveRight->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x - 1][position.y + 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y + 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x - 1][position.y + 1].SetPiece(pieceAboveRight);
+		}
+	}
+	// Move king up and left
+	if (position.x != 0 && position.y != 0) {
+		ChessPiece* pieceAboveLeft = board[position.x - 1][position.y - 1].GetPiece();
+		if (pieceAboveLeft == NULL || (pieceAboveLeft != NULL && pieceAboveLeft->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x - 1][position.y - 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y - 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x - 1][position.y - 1].SetPiece(pieceAboveLeft);
+		}
+	}
+	// Move king down and left
+	if (position.x != 7 && position.y != 0) {
+		ChessPiece* pieceBelowLeft = board[position.x + 1][position.y - 1].GetPiece();
+		if (pieceBelowLeft == NULL || (pieceBelowLeft != NULL && pieceBelowLeft->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x + 1][position.y - 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y - 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x + 1][position.y - 1].SetPiece(pieceBelowLeft);
+		}
+	}
+	// Move king down and right
+	if (position.x != 7 && position.y != 7) {
+		ChessPiece* pieceBelowRight = board[position.x + 1][position.y + 1].GetPiece();
+		if (pieceBelowRight == NULL || (pieceBelowRight != NULL && pieceBelowRight->getColor() != color)) {
+			board[position.x][position.y].Clear();
+			board[position.x + 1][position.y + 1].SetPiece(origPiece);
+			if (!Board::isKingInCheck(!whitesMove, board)) {
+				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y + 1));
+			}
+			board[position.x][position.y].SetPiece(origPiece);
+			board[position.x + 1][position.y + 1].SetPiece(pieceBelowRight);
+		}
+	}
 }

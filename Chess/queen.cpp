@@ -15,109 +15,15 @@ Queen::~Queen() {
 }
 
 // Public functions
-bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]) const {
-	ChessPiece* piece = board[position.x][position.y].GetPiece();
-	ChessPiece* otherPiece = board[moveToPosition.x][moveToPosition.y].GetPiece();
+bool Queen::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
+	
+	if (legalMoves["Q"].empty()) return (false);
 
-	// Cant take same color piece
-	if (otherPiece != NULL && otherPiece->getColor() == piece->getColor()) return (false);
+	const std::vector<sf::Vector2i>& queenMoves = legalMoves["Q"];
 
-	// Moving queen down
-	if (moveToPosition.x > position.x && moveToPosition.y == position.y) {
-		int i = 1;
-		while (moveToPosition.x - i > position.x) {
-			if (board[moveToPosition.x - i][moveToPosition.y].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (true);
-	}
+	auto it = std::find(queenMoves.begin(), queenMoves.end(), moveToPosition);
 
-	// Moving queen up
-	if (moveToPosition.x < position.x && moveToPosition.y == position.y) {
-		int i = 1;
-		while (moveToPosition.x + i < position.x) {
-			if (board[moveToPosition.x + i][moveToPosition.y].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (true);
-	}
-
-	// Moving queen left
-	if (moveToPosition.x == position.x && moveToPosition.y < position.y) {
-		int i = 1;
-		while (moveToPosition.y + i < position.y) {
-			if (board[moveToPosition.x][moveToPosition.y + i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (true);
-	}
-
-	// Moving queen right
-	if (moveToPosition.x == position.x && moveToPosition.y > position.y) {
-		int i = 1;
-		while (moveToPosition.y - i > position.y) {
-			if (board[moveToPosition.x][moveToPosition.y - i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (true);
-	}
-
-	// Moving queen up + left
-	if (moveToPosition.x < position.x && moveToPosition.y < position.y) {
-		int i = 1;
-		while (moveToPosition.x + i < position.x && moveToPosition.y + i < position.y) {
-			if (board[moveToPosition.x + i][moveToPosition.y + i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (moveToPosition.x + i == position.x && moveToPosition.y + i == position.y);
-	}
-
-	// Moving queen up + right
-	if (moveToPosition.x < position.x && moveToPosition.y > position.y) {
-		int i = 1;
-		while (moveToPosition.x + i < position.x && moveToPosition.y - i > position.y) {
-			if (board[moveToPosition.x + i][moveToPosition.y - i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (moveToPosition.x + i == position.x && moveToPosition.y - i == position.y);
-	}
-
-	// Moving queen down + left
-	if (moveToPosition.x > position.x && moveToPosition.y < position.y) {
-		int i = 1;
-		while (moveToPosition.x - i > position.x && moveToPosition.y + i < position.y) {
-			std::cout << moveToPosition.x - i << std::endl;
-			if (board[moveToPosition.x - i][moveToPosition.y + i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (moveToPosition.x - i == position.x && moveToPosition.y + i == position.y);
-	}
-
-	// Moving queen down + right
-	if (moveToPosition.x > position.x && moveToPosition.y > position.y) {
-		int i = 1;
-		while (moveToPosition.x - i > position.x && moveToPosition.y - i > position.y) {
-			if (board[moveToPosition.x - i][moveToPosition.y - i].GetPiece() != NULL) {
-				return (false);
-			}
-			i++;
-		}
-		return (moveToPosition.x - i == position.x && moveToPosition.y - i == position.y);
-	}
+	if (it != queenMoves.end()) return (true);
 
 	return (false);
 }
@@ -188,4 +94,216 @@ bool Queen::canPieceSeeTheKing(Square(&board)[8][8]) const {
 		i++;
 	}
 	return (false);
+}
+
+void Queen::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
+	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
+
+	// all legal moves where Queen can move upwards
+	int i = 1;
+	while (position.x - i >= 0) {
+		ChessPiece* otherPiece = board[position.x - i][position.y].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x - i + 1][position.y].Clear();
+				board[position.x - i][position.y].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y));
+				}
+				board[position.x - i][position.y].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x - i + 1][position.y].Clear();
+		board[position.x - i][position.y].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y));
+		}
+		i++;
+	}
+	board[position.x - i + 1][position.y].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move downwards
+	i = 1;
+	while (position.x + i <= 7) {
+		ChessPiece* otherPiece = board[position.x + i][position.y].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x + i - 1][position.y].Clear();
+				board[position.x + i][position.y].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y));
+				}
+				board[position.x + i][position.y].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x + i - 1][position.y].Clear();
+		board[position.x + i][position.y].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y));
+		}
+		i++;
+	}
+	board[position.x + i - 1][position.y].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move to the left
+	i = 1;
+	while (position.y - i >= 0) {
+		ChessPiece* otherPiece = board[position.x][position.y - i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x][position.y - i + 1].Clear();
+				board[position.x][position.y - i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x, position.y - i));
+				}
+				board[position.x][position.y - i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x][position.y - i + 1].Clear();
+		board[position.x][position.y - i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x, position.y - i));
+		}
+		i++;
+	}
+	board[position.x][position.y - i + 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move to the right
+	i = 1;
+	while (position.y + i <= 7) {
+		ChessPiece* otherPiece = board[position.x][position.y + i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x][position.y + i - 1].Clear();
+				board[position.x][position.y + i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x, position.y + i));
+				}
+				board[position.x][position.y + i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x][position.y + i - 1].Clear();
+		board[position.x][position.y + i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x, position.y + i));
+		}
+		i++;
+	}
+	board[position.x][position.y + i - 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move up and left
+	i = 1;
+	while (position.x - i >= 0 && position.y - i >= 0) {
+		ChessPiece* otherPiece = board[position.x - i][position.y - i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x - i + 1][position.y - i + 1].Clear();
+				board[position.x - i][position.y - i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y - i));
+				}
+				board[position.x - i][position.y - i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x - i + 1][position.y - i + 1].Clear();
+		board[position.x - i][position.y - i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y - i));
+		}
+		i++;
+	}
+	board[position.x - i + 1][position.y - i + 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move up and right
+	i = 1;
+	while (position.x - i >= 0 && position.y + i <= 7) {
+		ChessPiece* otherPiece = board[position.x - i][position.y + i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x - i + 1][position.y + i - 1].Clear();
+				board[position.x - i][position.y + i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y + i));
+				}
+				board[position.x - i][position.y + i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x - i + 1][position.y + i - 1].Clear();
+		board[position.x - i][position.y + i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y + i));
+		}
+		i++;
+	}
+	board[position.x - i + 1][position.y + i - 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move down and right
+	i = 1;
+	while (position.x + i <= 7 && position.y + i <= 7) {
+		ChessPiece* otherPiece = board[position.x + i][position.y + i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x + i - 1][position.y + i - 1].Clear();
+				board[position.x + i][position.y + i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y + i));
+				}
+				board[position.x + i][position.y + i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x + i - 1][position.y + i - 1].Clear();
+		board[position.x + i][position.y + i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y + i));
+		}
+		i++;
+	}
+	board[position.x + i - 1][position.y + i - 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
+
+	// all legal moves where Queen can move down and left
+	i = 1;
+	while (position.x + i <= 7 && position.y - i >= 0) {
+		ChessPiece* otherPiece = board[position.x + i][position.y - i].GetPiece();
+		if (otherPiece != NULL) {
+			if (otherPiece->getColor() != color) {
+				board[position.x + i - 1][position.y - i + 1].Clear();
+				board[position.x + i][position.y - i].SetPiece(origPiece);
+				if (!Board::isKingInCheck(!whitesMove, board)) {
+					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y - i));
+				}
+				board[position.x + i][position.y - i].SetPiece(otherPiece);
+			}
+			break;
+		}
+		board[position.x + i - 1][position.y - i + 1].Clear();
+		board[position.x + i][position.y - i].SetPiece(origPiece);
+		// check if same color king is in check after making a move
+		if (!Board::isKingInCheck(!whitesMove, board)) {
+			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y - i));
+		}
+		i++;
+	}
+	board[position.x + i - 1][position.y - i + 1].Clear();
+	board[position.x][position.y].SetPiece(origPiece);
 }

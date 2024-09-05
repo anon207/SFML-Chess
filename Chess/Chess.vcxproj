@@ -135,7 +135,6 @@
     <ClCompile Include="board.cpp" />
     <ClCompile Include="boardGraphics.cpp" />
     <ClCompile Include="chessPiece.cpp" />
-    <ClCompile Include="gameState.cpp" />
     <ClCompile Include="king.cpp" />
     <ClCompile Include="knight.cpp" />
     <ClCompile Include="main.cpp" />
@@ -149,7 +148,6 @@
     <ClInclude Include="board.hpp" />
     <ClInclude Include="boardGraphics.hpp" />
     <ClInclude Include="chessPiece.hpp" />
-    <ClInclude Include="gameState.hpp" />
     <ClInclude Include="king.hpp" />
     <ClInclude Include="knight.hpp" />
     <ClInclude Include="pawn.hpp" />
