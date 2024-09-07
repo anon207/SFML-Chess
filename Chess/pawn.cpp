@@ -46,26 +46,26 @@ bool Pawn::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 
 bool Pawn::canPieceSeeTheKing(Square(&board)[8][8]) const {
 	if (color == 'W') {
-		ChessPiece* upRight = board[position.x - 1][position.y + 1].GetPiece();
-		ChessPiece* upLeft = board[position.x - 1][position.y - 1].GetPiece();
-		if ((upRight != NULL &&
-			upRight->getType() == "K" &&
-			upRight->getColor() != color) ||
-			(upLeft != NULL &&
-				upLeft->getType() == "K" &&
-				upLeft->getColor() != color)) {
+		if ((position.x != 0 && position.y != 7 && 
+			board[position.x - 1][position.y + 1].GetPiece() != NULL &&
+			board[position.x - 1][position.y + 1].GetPiece()->getType() == "K" &&
+			board[position.x - 1][position.y + 1].GetPiece()->getColor() != color) ||
+			(position.x != 0 && position.y != 0 && 
+				board[position.x - 1][position.y - 1].GetPiece() != NULL &&
+				board[position.x - 1][position.y - 1].GetPiece()->getType() == "K" &&
+				board[position.x - 1][position.y - 1].GetPiece()->getColor() != color)) {
 			return (true);
 		}
 	}
 	if (color == 'B') {
-		ChessPiece* upRight = board[position.x + 1][position.y + 1].GetPiece();
-		ChessPiece* upLeft = board[position.x + 1][position.y - 1].GetPiece();
-		if ((upRight != NULL &&
-			upRight->getType() == "K" &&
-			upRight->getColor() != color) ||
-			(upLeft != NULL &&
-				upLeft->getType() == "K" &&
-				upLeft->getColor() != color)) {
+		if ((position.x != 7 && position.y != 7 && 
+			board[position.x + 1][position.y + 1].GetPiece() != NULL &&
+			board[position.x + 1][position.y + 1].GetPiece()->getType() == "K" &&
+			board[position.x + 1][position.y + 1].GetPiece()->getColor() != color) ||
+			(position.x != 7 && position.y != 0 &&
+				board[position.x + 1][position.y - 1].GetPiece() != NULL &&
+				board[position.x + 1][position.y - 1].GetPiece()->getType() == "K" &&
+				board[position.x + 1][position.y - 1].GetPiece()->getColor() != color)) {
 			return (true);
 		}
 	}

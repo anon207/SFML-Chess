@@ -20,6 +20,9 @@ int main() {
 
     bool whitesMove = true;
 
+    // 0 == in-progress, 1 == checkMate, 2 == draw, 3 == staleMate
+    int gameState = 0;
+
     sf::Font font;
     font.loadFromFile("assets/RobotoCondensed-Black.ttf");
 
@@ -31,7 +34,10 @@ int main() {
     while (window.isOpen()) {
         sf::Event event;
         while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed) {
+            if (event.type == sf::Event::Closed || gameState != 0) {
+                if (gameState == 1) {
+                    std::cout << "CHECKMATE" << std::endl;
+                }
                 window.close();
             }
 
@@ -48,7 +54,7 @@ int main() {
                     }
                     else {
                         // Second click: Attempt to move the piece
-                        if (board.MovePiece(selectedPiece, boardPosition, whitesMove, window)) {
+                        if (board.MovePiece(selectedPiece, boardPosition, whitesMove, window, gameState)) {
                             selectedPiece = sf::Vector2i(-1, -1); // Reset selection after move
                         }
                     }

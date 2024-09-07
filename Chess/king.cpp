@@ -33,6 +33,57 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 }
 
 bool King::canPieceSeeTheKing(Square(&board)[8][8]) const {
+	
+	ChessPiece* otherPiece = NULL;
+
+	// Can king see other king above it
+	if (position.x != 0) {
+		otherPiece = board[position.x - 1][position.y].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king below it
+	if (position.x != 7) {
+		otherPiece = board[position.x + 1][position.y].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king to the right of it
+	if (position.y != 7) {
+		otherPiece = board[position.x][position.y + 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king to the left of it
+	if (position.y != 0) {
+		otherPiece = board[position.x][position.y - 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king above and right of it
+	if (position.x != 0 && position.y != 7) {
+		otherPiece = board[position.x - 1][position.y + 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king above and left of it
+	if (position.x != 0 && position.y != 0) {
+		otherPiece = board[position.x - 1][position.y - 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king below and left of it
+	if (position.x != 7 && position.y != 0) {
+		otherPiece = board[position.x + 1][position.y - 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+
+	// Can king see other king below and right of it
+	if (position.x != 7 && position.y != 0) {
+		otherPiece = board[position.x + 1][position.y + 1].GetPiece();
+		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+	}
+	
 	return (false);
 }
 
