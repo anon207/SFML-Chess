@@ -1,21 +1,33 @@
 #include "Square.hpp"
-//#include <cstddef>
 
+// CONSTRUCTOR
+// PRE:
+// POST: Square object constructed with piece = nullptr
 Square::Square() {
     piece = nullptr;
 }
 
+// DESTRUCTOR
+// PRE:
+// POST:   
 Square::~Square() {
+
 }
 
+// PRE:
+// POST: RV = piece
 ChessPiece* Square::GetPiece() {
     return (piece);
 }
 
+// PRE: piece is a ChessPiece object that is defined or nullptr.
+// POST: piece = p
 void Square::SetPiece(ChessPiece* p) {
     piece = p;
 }
 
+// PRE: 
+// POST: piece = nullptr
 void Square::Clear() {
     piece = nullptr;
 }

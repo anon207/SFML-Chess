@@ -1,7 +1,10 @@
 #include "rook.hpp"
-#include <iostream>
 
-// Constructors
+// CONSTRUCTOR
+// PRE: pos is the rooks position on the board,
+//      col is the rooks color, 
+//      spr is the rooks sprite
+// POST: Rook object constructed
 Rook::Rook(const sf::Vector2i& pos, char col, const sf::Sprite& spr) {
 	position = pos;
 	color = col;
@@ -12,14 +15,17 @@ Rook::Rook(const sf::Vector2i& pos, char col, const sf::Sprite& spr) {
 	type = "R";
 }
 
+// DESTRUCTOR
+// PRE:
+// POST:
 Rook::~Rook() {
+
 }
 
-// Public functions
-bool const Rook::getHasMoved() const {
-	return (hasMoved);
-}
-
+// PRE: moveToPosition is an sf::Vector2i representing the position the piece is trying to move to
+//      board is a 8 x 8 matrix of Square objects representing the chess board.
+//      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+// POST: RV = true iff the move is valid or false iff the move is invalid
 bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
 	if (legalMoves["R"].empty()) return (false);
@@ -36,42 +42,51 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 	return (false);
 }
 
+// PRE: board is a 8 x 8 matrix of Square objects representing the chess board,
+// POST: RV is true iff piece can see the opposite color king, or false if piece
+//       cannot see the opposite color king
 bool Rook::canPieceSeeTheKing(Square(&board)[8][8]) const {
+	
 	// Check if the Rook can see the king above it
 	int i = 1;
 	while (position.x - i >= 0) {
 		ChessPiece* otherPiece = board[position.x - i][position.y].GetPiece();
-		if (otherPiece != NULL && otherPiece->getType() != "K") break;
-		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		if (otherPiece != nullptr && otherPiece->getType() != "K") break;
+		if (otherPiece != nullptr && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
 		i++;
 	}
 	// Check if the Rook can see the king below it
 	i = 1;
 	while (position.x + i <= 7) {
 		ChessPiece* otherPiece = board[position.x + i][position.y].GetPiece();
-		if (otherPiece != NULL && otherPiece->getType() != "K") break;
-		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		if (otherPiece != nullptr && otherPiece->getType() != "K") break;
+		if (otherPiece != nullptr && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
 		i++;
 	}
 	// Check if the Rook can see the king to the left of it
 	i = 1;
 	while (position.y - i >= 0) {
 		ChessPiece* otherPiece = board[position.x][position.y - i].GetPiece();
-		if (otherPiece != NULL && otherPiece->getType() != "K") break;
-		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		if (otherPiece != nullptr && otherPiece->getType() != "K") break;
+		if (otherPiece != nullptr && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
 		i++;
 	}
 	// Check if the Rook can see the king to the right of it
 	i = 1;
 	while (position.y + i <= 7) {
 		ChessPiece* otherPiece = board[position.x][position.y + i].GetPiece();
-		if (otherPiece != NULL && otherPiece->getType() != "K") break;
-		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
+		if (otherPiece != nullptr && otherPiece->getType() != "K") break;
+		if (otherPiece != nullptr && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
 		i++;
 	}
 	return (false);
 }
 
+// PRE: legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+//      board is a 8 x 8 matrix of Square objects representing the chess board,
+//      whitesMove is a boolean value that is true iff its whites turn or false
+//      iff its blacks turn.
+// POST: legalMoves now contains all the legal moves of the ChessPiece type object.
 void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
 	
 	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
@@ -80,7 +95,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 	int i = 1;
 	while (position.x - i >= 0) {
 		ChessPiece* otherPiece = board[position.x - i][position.y].GetPiece();
-		if (otherPiece != NULL) {
+		if (otherPiece != nullptr) {
 			if (otherPiece->getColor() != color) {
 				board[position.x - i + 1][position.y].Clear();
 				board[position.x - i][position.y].SetPiece(origPiece);
@@ -106,7 +121,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 	i = 1;
 	while (position.x + i <= 7) {
 		ChessPiece* otherPiece = board[position.x + i][position.y].GetPiece();
-		if (otherPiece != NULL) {
+		if (otherPiece != nullptr) {
 			if (otherPiece->getColor() != color) {
 				board[position.x + i - 1][position.y].Clear();
 				board[position.x + i][position.y].SetPiece(origPiece);
@@ -132,7 +147,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 	i = 1;
 	while (position.y - i >= 0) {
 		ChessPiece* otherPiece = board[position.x][position.y - i].GetPiece();
-		if (otherPiece != NULL) {
+		if (otherPiece != nullptr) {
 			if (otherPiece->getColor() != color) {
 				board[position.x][position.y - i + 1].Clear();
 				board[position.x][position.y - i].SetPiece(origPiece);
@@ -158,7 +173,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 	i = 1;
 	while (position.y + i <= 7) {
 		ChessPiece* otherPiece = board[position.x][position.y + i].GetPiece();
-		if (otherPiece != NULL) {
+		if (otherPiece != nullptr) {
 			if (otherPiece->getColor() != color) {
 				board[position.x][position.y + i - 1].Clear();
 				board[position.x][position.y + i].SetPiece(origPiece);

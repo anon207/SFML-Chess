@@ -363,9 +363,9 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
     // White castling
     if (origPiece->getColor() == 'W' && origPiece->getType() == "K" && whitesMove && !origPiece->getHasMoved()) {
         // King-side castling
-        if (board[7][7].GetPiece() != NULL && board[7][7].GetPiece()->getType() == "R" &&
+        if (board[7][7].GetPiece() != nullptr && board[7][7].GetPiece()->getType() == "R" &&
             board[7][7].GetPiece()->getColor() == 'W' && !board[7][7].GetPiece()->getHasMoved() &&
-            board[7][6].GetPiece() == NULL && board[7][5].GetPiece() == NULL &&
+            board[7][6].GetPiece() == nullptr && board[7][5].GetPiece() == nullptr &&
             toPos.x == 7 && (toPos.y == 6 || toPos.y == 7)) {
 
             // Check if the king would be moving through check or not
@@ -412,9 +412,9 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
             return (false);
         }
         // Queen-side castling
-        if (board[7][0].GetPiece() != NULL && board[7][0].GetPiece()->getType() == "R" &&
+        if (board[7][0].GetPiece() != nullptr && board[7][0].GetPiece()->getType() == "R" &&
             board[7][0].GetPiece()->getColor() == 'W' && !board[7][0].GetPiece()->getHasMoved() &&
-            board[7][1].GetPiece() == NULL && board[7][2].GetPiece() == NULL && board[7][3].GetPiece() == NULL &&
+            board[7][1].GetPiece() == nullptr && board[7][2].GetPiece() == nullptr && board[7][3].GetPiece() == nullptr &&
             toPos.x == 7 && (toPos.y == 2 || toPos.y == 1 || toPos.y == 0)) {
 
             // Check if the king would be moving through check or not
@@ -475,9 +475,9 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
     // Black castling
     if (origPiece->getColor() == 'B' && origPiece->getType() == "K" && !whitesMove && !origPiece->getHasMoved()) {
         // King-side castling
-        if (board[0][7].GetPiece() != NULL && board[0][7].GetPiece()->getType() == "R" &&
+        if (board[0][7].GetPiece() != nullptr && board[0][7].GetPiece()->getType() == "R" &&
             board[0][7].GetPiece()->getColor() == 'B' && !board[0][7].GetPiece()->getHasMoved() &&
-            board[0][6].GetPiece() == NULL && board[0][5].GetPiece() == NULL &&
+            board[0][6].GetPiece() == nullptr && board[0][5].GetPiece() == nullptr &&
             toPos.x == 0 && (toPos.y == 6 || toPos.y == 7)) {
 
             std::cout << "Made it into Black castle function" << std::endl;
@@ -526,9 +526,9 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
             return (false);
         }
         // Queen-side castling
-        if (board[0][0].GetPiece() != NULL && board[0][0].GetPiece()->getType() == "R" &&
+        if (board[0][0].GetPiece() != nullptr && board[0][0].GetPiece()->getType() == "R" &&
             board[0][0].GetPiece()->getColor() == 'B' && !board[0][0].GetPiece()->getHasMoved() &&
-            board[0][1].GetPiece() == NULL && board[0][2].GetPiece() == NULL && board[0][3].GetPiece() == NULL &&
+            board[0][1].GetPiece() == nullptr && board[0][2].GetPiece() == nullptr && board[0][3].GetPiece() == nullptr &&
             toPos.x == 0 && (toPos.y == 2 || toPos.y == 1 || toPos.y == 0)) {
 
 
@@ -598,10 +598,10 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
 // POST: White pawn captures en passant or Black pawn captures en passant
 //       or move is invalid.
 bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, int& gameState) {
-    if (destPiece == NULL &&
+    if (destPiece == nullptr &&
         (origPiece->getColor() == 'W' &&
             toPos.x == origPiece->getPosition().x - 1 &&
-            board[toPos.x + 1][toPos.y].GetPiece() != NULL &&
+            board[toPos.x + 1][toPos.y].GetPiece() != nullptr &&
             board[toPos.x + 1][toPos.y].GetPiece()->getType() == "P" &&
             board[toPos.x + 1][toPos.y].GetPiece()->getColor() != origPiece->getColor() &&
             board[toPos.x + 1][toPos.y].GetPiece()->getLastMoved() == true &&
@@ -609,7 +609,7 @@ bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, bool& w
             board[toPos.x + 1][toPos.y].GetPiece()->getSquaresMoved() == 2) ||
         (origPiece->getColor() == 'B' &&
             toPos.x == origPiece->getPosition().x + 1 &&
-            board[toPos.x - 1][toPos.y].GetPiece() != NULL &&
+            board[toPos.x - 1][toPos.y].GetPiece() != nullptr &&
             board[toPos.x - 1][toPos.y].GetPiece()->getType() == "P" &&
             board[toPos.x - 1][toPos.y].GetPiece()->getColor() != origPiece->getColor() &&
             board[toPos.x - 1][toPos.y].GetPiece()->getLastMoved() == true &&
@@ -764,11 +764,11 @@ bool Board::isKingInCheck(bool whitesMove, Square (&board)[8][8]) {
         for (int col = 0; col < 8; col++) {
             ChessPiece* piece = board[row][col].GetPiece();
             // After black makes a valid move check if white king is in check
-            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
+            if (piece != nullptr && piece->getColor() == 'B' && !whitesMove) {
                 if (piece->canPieceSeeTheKing(board)) return (true);
             }
             // After white makes a valid move check if black king is in check
-            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
+            if (piece != nullptr && piece->getColor() == 'W' && whitesMove) {
                 if (piece->canPieceSeeTheKing(board)) return (true);
             }
         }
@@ -786,11 +786,11 @@ std::unordered_map<std::string, std::vector<sf::Vector2i>> Board::getLegalMoves(
         for (int col = 0; col < 8; col++) {
             ChessPiece* piece = board[row][col].GetPiece();
             // Get all legal moves with the black pieces
-            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
+            if (piece != nullptr && piece->getColor() == 'B' && !whitesMove) {
                 piece->allLegalMoves(legalMoves, board, whitesMove);
             }
             // Get all legal moves with the white pieces
-            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
+            if (piece != nullptr && piece->getColor() == 'W' && whitesMove) {
                 piece->allLegalMoves(legalMoves, board, whitesMove);
             }
         }
@@ -906,7 +906,7 @@ void Board::drawBoard(sf::RenderWindow& window) {
     for (int row = 0; row < 8; row++) {
         for (int col = 0; col < 8; col++) {
             ChessPiece* piece = board[row][col].GetPiece();
-            if (piece != NULL) {
+            if (piece != nullptr) {
                 piece->getSprite().setPosition((piece->getPosition().y * squareSize) + piece->getOffsetX(), (piece->getPosition().x * squareSize) + piece->getOffsetY());
                 window.draw(piece->getSprite());
             }
