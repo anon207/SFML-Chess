@@ -79,7 +79,7 @@ bool King::canPieceSeeTheKing(Square(&board)[8][8]) const {
 	}
 
 	// Can king see other king below and right of it
-	if (position.x != 7 && position.y != 0) {
+	if (position.x != 7 && position.y != 7) {
 		otherPiece = board[position.x + 1][position.y + 1].GetPiece();
 		if (otherPiece != NULL && otherPiece->getType() == "K" && otherPiece->getColor() != color) return (true);
 	}

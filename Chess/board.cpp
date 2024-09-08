@@ -7,6 +7,9 @@
 #include "king.hpp"
 #include <iostream>
 
+// CONSTRUCTOR
+// PRE: 
+// POST: Board object created and all pieces are initilized on their starting squares.
 Board::Board() : lastFromPos(-1, -1), lastToPos(-1, -1) {
     invalidMove.loadFromFile("assets/incorrect.wav");
     invalidMoveSound.setBuffer(invalidMove);
@@ -40,12 +43,48 @@ Board::Board() : lastFromPos(-1, -1), lastToPos(-1, -1) {
     chinaSound.setBuffer(china);
     chinaSound.setVolume(100);
 
+    gameEnd.loadFromFile("assets/game-end.wav");
+    gameEndSound.setBuffer(gameEnd);
+    gameEndSound.setVolume(100);
+
     InitializePieces();
 }
 
+// DESTRUCTOR
+// PRE: 
+// POST:
 Board::~Board() {
+
 }
 
+// PRE: 
+// POST: All Pieces on board are deleted and re-initilized along with
+//       lastFromPos and lastToPos being reset to (-1, -1).
+void Board::resetBoard() {
+    for (int row = 0; row < 8; ++row) {
+        for (int col = 0; col < 8; ++col) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            if (piece != nullptr) {
+                delete piece;
+                board[row][col].SetPiece(nullptr);
+            }
+        }
+    }
+    InitializePieces();
+    lastFromPos = sf::Vector2i(-1, -1);
+    lastToPos = sf::Vector2i(-1, -1);
+}
+
+// PRE: origPiece is a ChessPiece object that could be null, 
+//      whitesMove is a bool that represents whos turn it is, 
+//      fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+//      moveCompleted is a bool that determines whether the move was valid or not,
+//      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+//      gameState is an int representing the current state of the game
+// POST: white pawn is promoted to one of four pieces- queen, bishop, rook, knight,
+//       or move is invalid.
 bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
     if (origPiece != nullptr &&
         (origPiece->getColor() == 'W' && whitesMove == true) &&
@@ -163,7 +202,7 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if (!checkForCheckmateOrCheck(whitesMove, gameState)) promoteSound.play();
+            if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
@@ -173,6 +212,16 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
     return (moveCompleted);
 }
 
+// PRE: origPiece is a ChessPiece object that could be null, 
+//      whitesMove is a bool that represents whos turn it is, 
+//      fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+//      moveCompleted is a bool that determines whether the move was valid or not,
+//      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+//      gameState is an int representing the current state of the game
+// POST: Black pawn is promoted to one of four pieces- queen, bishop, rook, knight,
+//       or move is invalid.
 bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
     if (origPiece != nullptr &&
         (origPiece->getColor() == 'B' && !whitesMove) &&
@@ -290,7 +339,7 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if(!checkForCheckmateOrCheck(whitesMove, gameState)) promoteSound.play();
+            if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
@@ -301,14 +350,16 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
     return (moveCompleted);
 }
 
-void Board::makeWindowTransparent(sf::RenderWindow& window, BYTE transparency) {
-    HWND hwnd = window.getSystemHandle();
-    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
-    SetLayeredWindowAttributes(hwnd, 0, transparency, LWA_ALPHA);
-}
-
-
-bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& toPos, sf::Vector2i& fromPos, sf::Vector2i& lastToPos, sf::Vector2i& lastFromPos, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int &gameState) {
+// PRE: origPiece is a ChessPiece object that could be null, 
+//      whitesMove is a bool that represents whos turn it is, 
+//      fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+//      gameState is an int representing the current state of the game
+// POST: White king is either castled king-side or queen side or
+//       Black king is either castled king-side or queen side,
+//       or move is invalid.
+bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int &gameState) {
     // White castling
     if (origPiece->getColor() == 'W' && origPiece->getType() == "K" && whitesMove && !origPiece->getHasMoved()) {
         // King-side castling
@@ -316,7 +367,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             board[7][7].GetPiece()->getColor() == 'W' && !board[7][7].GetPiece()->getHasMoved() &&
             board[7][6].GetPiece() == NULL && board[7][5].GetPiece() == NULL &&
             toPos.x == 7 && (toPos.y == 6 || toPos.y == 7)) {
-            
+
             // Check if the king would be moving through check or not
             bool passedFirstCheck = false;
             bool passedSecondCheck = false;
@@ -345,7 +396,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(7, 7);
-                    if (!checkForCheckmateOrCheck(whitesMove, gameState)) castleSound.play();
+                    if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     return (true);
                 }
@@ -399,7 +450,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(7, 0);
-                        if (!checkForCheckmateOrCheck(whitesMove, gameState)) castleSound.play();
+                        if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         return (true);
                     }
@@ -429,6 +480,8 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
             board[0][6].GetPiece() == NULL && board[0][5].GetPiece() == NULL &&
             toPos.x == 0 && (toPos.y == 6 || toPos.y == 7)) {
 
+            std::cout << "Made it into Black castle function" << std::endl;
+
             // Check if the king would be moving through check or not
             bool passedFirstCheck = false;
             bool passedSecondCheck = false;
@@ -457,7 +510,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(0, 7);
-                    if (!checkForCheckmateOrCheck(whitesMove, gameState)) castleSound.play();
+                    if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     return (true);
                 }
@@ -512,7 +565,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(0, 0);
-                        if (!checkForCheckmateOrCheck(whitesMove, gameState)) castleSound.play();
+                        if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         return (true);
                     }
@@ -536,7 +589,15 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& t
     return (false);
 }
 
-bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vector2i& toPos, sf::Vector2i& fromPos, bool& whitesMove, int& gameState) {
+// PRE: origPiece is a ChessPiece object that could be null,
+//      destPiece is a ChessPiece object that could be null, 
+//      whitesMove is a bool that represents whos turn it is, 
+//      fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      gameState is an int representing the current state of the game
+// POST: White pawn captures en passant or Black pawn captures en passant
+//       or move is invalid.
+bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, int& gameState) {
     if (destPiece == NULL &&
         (origPiece->getColor() == 'W' &&
             toPos.x == origPiece->getPosition().x - 1 &&
@@ -588,68 +649,27 @@ bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, sf::Vec
         lastToPos = toPos;
         whitesMove = !whitesMove;
         
-        if (!checkForCheckmateOrCheck(whitesMove, gameState)) captureSound.play();
+        if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) captureSound.play();
 
         return (true);
     }
 }
 
-void Board::updateLastMovedPiece(ChessPiece* origPiece) {
-    for (int row = 0; row < 8; row++) {
-        for (int col = 0; col < 8; col++) {
-            ChessPiece* piece = board[row][col].GetPiece();
-            if (piece != nullptr) {
-                if (piece->getLastMoved() == true) {
-                    piece->setLastMoved(false);
-                }
-            }
-        }
-    }
-    origPiece->setLastMoved(true);
-}
-
-bool Board::isKingInCheck(bool whitesMove, Square (&board)[8][8]) {
-    for (int row = 0; row < 8; row++) {
-        for (int col = 0; col < 8; col++) {
-            ChessPiece* piece = board[row][col].GetPiece();
-            // After black makes a valid move check if white king is in check
-            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
-                if (piece->canPieceSeeTheKing(board)) return (true);
-            }
-            // After white makes a valid move check if black king is in check
-            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
-                if (piece->canPieceSeeTheKing(board)) return (true);
-            }
-        }
-    }
-    return (false);
-}
-
-std::unordered_map<std::string, std::vector<sf::Vector2i>> Board::getLegalMoves(bool whitesMove) {
-    std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves;
-    for (int row = 0; row < 8; row++) {
-        for (int col = 0; col < 8; col++) {
-            ChessPiece* piece = board[row][col].GetPiece();
-            // Get all legal moves with the black pieces
-            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
-                piece->allLegalMoves(legalMoves, board, whitesMove);
-            }
-            // Get all legal moves with the white pieces
-            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
-                piece->allLegalMoves(legalMoves, board, whitesMove);
-            }
-        }
-    }
-    return (legalMoves);
-}
-
+// PRE: origPiece is a ChessPiece object that could be null,
+//      destPiece is a ChessPiece object that could be null,
+//      whitesMove is a bool that represents whos turn it is, 
+//      fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      moveCompleted is a bool that determines whether the move was valid or not,
+//      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
+//      gameState is an int representing the current state of the game
+// POST: Move is completed or move is invalid.
 bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
     bool playCaptureSound = false;
-    
+
     if (origPiece != nullptr &&
         ((origPiece->getColor() == 'W' && whitesMove) || (origPiece->getColor() == 'B' && !whitesMove)) &&
         fromPos != toPos && origPiece->validateMove(toPos, board, legalMoves)) {
-
         if (destPiece != nullptr && destPiece->getColor() != origPiece->getColor()) {
             board[toPos.x][toPos.y].Clear();
             playCaptureSound = true;
@@ -665,13 +685,15 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
 
         updateLastMovedPiece(origPiece);
 
-        if (!checkForCheckmateOrCheck(whitesMove, gameState)) {
-            if (playCaptureSound) {
-                captureSound.play();
-            }
-            else {
-                if (origPiece->getColor() == 'W') moveWhiteSound.play();
-                if (origPiece->getColor() == 'B') moveBlackSound.play();
+        if (!checkForStalemate(whitesMove, gameState)) {
+            if (!checkForCheckmateOrCheck(whitesMove, gameState)) {
+                if (playCaptureSound) {
+                    captureSound.play();
+                }
+                else {
+                    if (origPiece->getColor() == 'W') moveWhiteSound.play();
+                    if (origPiece->getColor() == 'B') moveBlackSound.play();
+                }
             }
         }
 
@@ -681,16 +703,19 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
         moveCompleted = true;
         whitesMove = !whitesMove;
     }
-
-    if (!moveCompleted) {
-        invalidMoveSound.play();
-        fromPos = sf::Vector2i(-1, -1);
-    }
     return (moveCompleted);
 }
 
+// PRE: fromPos is a sf::Vector2i representing where the piece is moving from,
+//      toPos is a sf::Vector2i representing where the piece is moving to,
+//      whitesMove is a bool that represents whos turn it is, 
+//      window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+//      moveCompleted is a bool that determines whether the move was valid or not,
+//      gameState is an int representing the current state of the game
+// POST: Determines if move is special (castling, en passant, pawn promotion) or normal and whether
+//       or not the move is valid.
 bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window, int& gameState) {
-    
+
     std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = getLegalMoves(whitesMove);
     for (const auto& [pieceType, moves] : legalMoves) {
         std::cout << "Piece Type: " << pieceType << std::endl;
@@ -709,115 +734,96 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
     ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
 
     // Check for castling
-    if (checkCastle(origPiece, whitesMove, toPos, fromPos, lastToPos, lastFromPos, legalMoves, gameState)) return (true);
+    if (checkCastle(origPiece, whitesMove, fromPos, toPos, legalMoves, gameState)) return (true);
 
     // Check for pawn promotion
     if (checkPromotionWhite(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState) ||
         checkPromotionBlack(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState)) return (true);
 
     // Check for en passant
-    if (checkEnPassant(origPiece, destPiece, toPos, fromPos, whitesMove, gameState)) return (true);
-    
+    if (checkEnPassant(origPiece, destPiece, whitesMove, fromPos, toPos, gameState)) return (true);
+
     // Check for any other move
     moveCompleted = checkNormalMove(origPiece, destPiece, whitesMove, fromPos, toPos, moveCompleted, legalMoves, gameState);
-    
+
+    if (!moveCompleted) {
+        invalidMoveSound.play();
+        fromPos = sf::Vector2i(-1, -1);
+        toPos = sf::Vector2i(-1, -1);
+    }
+
     return (moveCompleted);
 }
 
+// PRE: whitesMove is a bool that represents whos turn it is,
+//      board is a reference to the internal state of the Board object
+// POST: determines whether or not the opposite color king is in check
+//       based on whos turn it is.
+bool Board::isKingInCheck(bool whitesMove, Square (&board)[8][8]) {
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            // After black makes a valid move check if white king is in check
+            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
+                if (piece->canPieceSeeTheKing(board)) return (true);
+            }
+            // After white makes a valid move check if black king is in check
+            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
+                if (piece->canPieceSeeTheKing(board)) return (true);
+            }
+        }
+    }
+    return (false);
+}
+
+// PRE: whitesMove is a bool that represents whos turn it is,
+// POST: RV is a hashmap of all legal moves from whoever's turn it is,
+//       keys = piece type, values = vectors of sf::Vector2i's representing valid positions
+//       to move to.
+std::unordered_map<std::string, std::vector<sf::Vector2i>> Board::getLegalMoves(bool whitesMove) {
+    std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves;
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            // Get all legal moves with the black pieces
+            if (piece != NULL && piece->getColor() == 'B' && !whitesMove) {
+                piece->allLegalMoves(legalMoves, board, whitesMove);
+            }
+            // Get all legal moves with the white pieces
+            if (piece != NULL && piece->getColor() == 'W' && whitesMove) {
+                piece->allLegalMoves(legalMoves, board, whitesMove);
+            }
+        }
+    }
+    return (legalMoves);
+}
+
+// PRE: origPiece is a ChessPiece object that is not null,
+// POST: updates the most recently moved piece as the last moved piece
+//       (used for en passant).
+void Board::updateLastMovedPiece(ChessPiece* origPiece) {
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            if (piece != nullptr) {
+                if (piece->getLastMoved() == true) {
+                    piece->setLastMoved(false);
+                }
+            }
+        }
+    }
+    origPiece->setLastMoved(true);
+}
+
+// PRE: piecePos is a sf::Vector2i representing the position of the piece being grabbed.
+// POST: RV is pointer to ChessPiece object, can be null or defined.
 ChessPiece* Board::GetPiece(sf::Vector2i piecePos) {
     return board[piecePos.x][piecePos.y].GetPiece();
 }
 
-void Board::InitializePieces() {
-    // Load texture
-    pieceTexture.loadFromFile("assets/chess_pieces.png");
-    
-    // Initialize Pawns
-    sf::Sprite WhitePawnSprite;
-    WhitePawnSprite.setTexture(pieceTexture);
-    WhitePawnSprite.setTextureRect(sf::IntRect(1571, 0, 314, 270));
-    WhitePawnSprite.setScale(0.34f, 0.34f);
-
-    sf::Sprite BlackPawnSprite;
-    BlackPawnSprite.setTexture(pieceTexture);
-    BlackPawnSprite.setTextureRect(sf::IntRect(1571, 335, 314, 270));
-    BlackPawnSprite.setScale(0.34f, 0.34f);
-    for (int col = 0; col < 8; ++col) {
-        board[1][col].SetPiece(new Pawn(sf::Vector2i(1, col), 'B', BlackPawnSprite));
-        board[6][col].SetPiece(new Pawn(sf::Vector2i(6, col), 'W', WhitePawnSprite));
-    }
-
-    //board[1][7].SetPiece(new Pawn(sf::Vector2i(1, 7), 'B', BlackPawnSprite));
-    //board[2][6].SetPiece(new Pawn(sf::Vector2i(2, 6), 'B', BlackPawnSprite));
-    
-    //// Initialize Rooks
-    //sf::Sprite WhiteRookSprite;
-    //WhiteRookSprite.setTexture(pieceTexture);
-    //WhiteRookSprite.setTextureRect(sf::IntRect(1270, 0, 314, 270));
-    //WhiteRookSprite.setScale(0.34f, 0.34f);
-
-    //sf::Sprite BlackRookSprite;
-    //BlackRookSprite.setTexture(pieceTexture);
-    //BlackRookSprite.setTextureRect(sf::IntRect(1270, 335, 314, 270));
-    //BlackRookSprite.setScale(0.34f, 0.34f);
-    //for (int i = 0; i < 8; i += 7) {
-    //    board[0][i].SetPiece(new Rook(sf::Vector2i(0, i), 'B', BlackRookSprite));
-    //    board[7][i].SetPiece(new Rook(sf::Vector2i(7, i), 'W', WhiteRookSprite));
-    //}
-    //// Initialize Knights
-    //sf::Sprite WhiteKnightSprite;
-    //WhiteKnightSprite.setTexture(pieceTexture);
-    //WhiteKnightSprite.setTextureRect(sf::IntRect(970, 0, 314, 270));
-    //WhiteKnightSprite.setScale(0.34f, 0.34f);
-
-    //sf::Sprite BlackKnightSprite;
-    //BlackKnightSprite.setTexture(pieceTexture);
-    //BlackKnightSprite.setTextureRect(sf::IntRect(970, 335, 314, 270));
-    //BlackKnightSprite.setScale(0.34f, 0.34f);
-    //for (int i = 1; i < 7; i += 5) {
-    //    board[0][i].SetPiece(new Knight(sf::Vector2i(0, i), 'B', BlackKnightSprite));
-    //    board[7][i].SetPiece(new Knight(sf::Vector2i(7, i), 'W', WhiteKnightSprite));
-    //}
-    //// Initialize Bishops
-    //sf::Sprite WhiteBishopSprite;
-    //WhiteBishopSprite.setTexture(pieceTexture);
-    //WhiteBishopSprite.setTextureRect(sf::IntRect(670, 0, 314, 270));
-    //WhiteBishopSprite.setScale(0.34f, 0.34f);
-
-    //sf::Sprite BlackBishopSprite;
-    //BlackBishopSprite.setTexture(pieceTexture);
-    //BlackBishopSprite.setTextureRect(sf::IntRect(670, 335, 314, 270));
-    //BlackBishopSprite.setScale(0.34f, 0.34f);
-    //for (int i = 2; i < 6; i += 3) {
-    //    board[0][i].SetPiece(new Bishop(sf::Vector2i(0, i), 'B', BlackBishopSprite));
-    //    board[7][i].SetPiece(new Bishop(sf::Vector2i(7, i), 'W', WhiteBishopSprite));
-    //}
-    //// Initialize Queens
-    //sf::Sprite WhiteQueenSprite;
-    //WhiteQueenSprite.setTexture(pieceTexture);
-    //WhiteQueenSprite.setTextureRect(sf::IntRect(320, 0, 340, 270));
-    //WhiteQueenSprite.setScale(0.34f, 0.34f);
-
-    //sf::Sprite BlackQueenSprite;
-    //BlackQueenSprite.setTexture(pieceTexture);
-    //BlackQueenSprite.setTextureRect(sf::IntRect(320, 335, 340, 270));
-    //BlackQueenSprite.setScale(0.34f, 0.34f);
-    //board[0][3].SetPiece(new Queen(sf::Vector2i(0, 3), 'B', BlackQueenSprite));
-    //board[7][3].SetPiece(new Queen(sf::Vector2i(7, 3), 'W', WhiteQueenSprite));
-    // Initialize Kings
-    sf::Sprite WhiteKingSprite;
-    WhiteKingSprite.setTexture(pieceTexture);
-    WhiteKingSprite.setTextureRect(sf::IntRect(0, 0, 314, 270));
-    WhiteKingSprite.setScale(0.34f, 0.34f);
-
-    sf::Sprite BlackKingSprite;
-    BlackKingSprite.setTexture(pieceTexture);
-    BlackKingSprite.setTextureRect(sf::IntRect(0, 335, 314, 270));
-    BlackKingSprite.setScale(0.34f, 0.34f);
-    board[0][4].SetPiece(new King(sf::Vector2i(0, 4), 'B', BlackKingSprite));
-    board[7][4].SetPiece(new King(sf::Vector2i(7, 4), 'W', WhiteKingSprite));
-}
-
+// PRE: mousePosition is a sf::Vector2i representing where on the board a mouse click was registered
+//      windowWidth is an int representing the width of the window.
+// POST: RV is sf::Vector2i representing a square on the board.
 sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth) {
     int cellSize = windowWidth / 8;
 
@@ -827,10 +833,9 @@ sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int wind
     return sf::Vector2i(row, col);
 }
 
-Square(&Board::getBoard())[8][8]{
-    return (board);
-}
-
+// PRE: whitesMove is a bool that represents whos turn it is,
+//      gameState is an int representing the current state of the game.
+// POST: RV is either true (Checkmate or check) or false (game in progress).
 bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState) {
     std::unordered_map<std::string, std::vector<sf::Vector2i>> otherColorLegalMoves = getLegalMoves(!whitesMove);
 
@@ -844,7 +849,8 @@ bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState) {
 
         if (noLegalMoves) {
             gameState = 1;
-            chinaSound.play();
+            checkSound.play();
+            gameEndSound.play();
         }
         else {
             checkSound.play();
@@ -854,7 +860,31 @@ bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState) {
     return (false);
 }
 
-// Graphical display
+// PRE: whitesMove is a bool that represents whos turn it is,
+    //      gameState is an int representing the current state of the game.
+    // POST: RV is either true (stalemate) or false (game in progress).
+bool Board::checkForStalemate(bool whitesMove, int& gameState) {
+    std::unordered_map<std::string, std::vector<sf::Vector2i>> otherColorLegalMoves = getLegalMoves(!whitesMove);
+
+    if (!isKingInCheck(whitesMove, board)) {
+        bool noLegalMoves = otherColorLegalMoves["R"].empty() &&
+            otherColorLegalMoves["P"].empty() &&
+            otherColorLegalMoves["K"].empty() &&
+            otherColorLegalMoves["Q"].empty() &&
+            otherColorLegalMoves["B"].empty() &&
+            otherColorLegalMoves["N"].empty();
+
+        if (noLegalMoves) {
+            gameState = 3;
+            gameEndSound.play();
+            return (true);
+        }
+    }
+    return (false);
+}
+
+// PRE: window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+// POST: logical display of board is displayed graphically to the window.
 void Board::drawBoard(sf::RenderWindow& window) {
     int squareSize = 100;
 
@@ -884,7 +914,9 @@ void Board::drawBoard(sf::RenderWindow& window) {
     }
 }
 
-// Debugging function
+// PRE: board is a Board type object representing the internal state of the board.
+// POST: board's internal state is displayed to the terminal.
+//      (useful for debugging).
 void Board::DisplayBoard(Board board) {
     const int boardSize = 8;
     const std::string columnDivider = " | ";
@@ -905,4 +937,106 @@ void Board::DisplayBoard(Board board) {
         std::cout << columnDivider << std::endl;
     }
     std::cout << rowDivider << std::endl;
+}
+
+// PRE:
+// POST: All pieces are placed on their defualt squares and initilized correctly.
+void Board::InitializePieces() {
+    // Load texture
+    pieceTexture.loadFromFile("assets/chess_pieces.png");
+    
+    // Initialize Pawns
+    sf::Sprite WhitePawnSprite;
+    WhitePawnSprite.setTexture(pieceTexture);
+    WhitePawnSprite.setTextureRect(sf::IntRect(1571, 0, 314, 270));
+    WhitePawnSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackPawnSprite;
+    BlackPawnSprite.setTexture(pieceTexture);
+    BlackPawnSprite.setTextureRect(sf::IntRect(1571, 335, 314, 270));
+    BlackPawnSprite.setScale(0.34f, 0.34f);
+    for (int col = 0; col < 8; ++col) {
+        board[1][col].SetPiece(new Pawn(sf::Vector2i(1, col), 'B', BlackPawnSprite));
+        board[6][col].SetPiece(new Pawn(sf::Vector2i(6, col), 'W', WhitePawnSprite));
+    }
+
+    // Initialize Rooks
+    sf::Sprite WhiteRookSprite;
+    WhiteRookSprite.setTexture(pieceTexture);
+    WhiteRookSprite.setTextureRect(sf::IntRect(1270, 0, 314, 270));
+    WhiteRookSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackRookSprite;
+    BlackRookSprite.setTexture(pieceTexture);
+    BlackRookSprite.setTextureRect(sf::IntRect(1270, 335, 314, 270));
+    BlackRookSprite.setScale(0.34f, 0.34f);
+    for (int i = 0; i < 8; i += 7) {
+        board[0][i].SetPiece(new Rook(sf::Vector2i(0, i), 'B', BlackRookSprite));
+        board[7][i].SetPiece(new Rook(sf::Vector2i(7, i), 'W', WhiteRookSprite));
+    }
+    // Initialize Knights
+    sf::Sprite WhiteKnightSprite;
+    WhiteKnightSprite.setTexture(pieceTexture);
+    WhiteKnightSprite.setTextureRect(sf::IntRect(970, 0, 314, 270));
+    WhiteKnightSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackKnightSprite;
+    BlackKnightSprite.setTexture(pieceTexture);
+    BlackKnightSprite.setTextureRect(sf::IntRect(970, 335, 314, 270));
+    BlackKnightSprite.setScale(0.34f, 0.34f);
+    for (int i = 1; i < 7; i += 5) {
+        board[0][i].SetPiece(new Knight(sf::Vector2i(0, i), 'B', BlackKnightSprite));
+        board[7][i].SetPiece(new Knight(sf::Vector2i(7, i), 'W', WhiteKnightSprite));
+    }
+    // Initialize Bishops
+    sf::Sprite WhiteBishopSprite;
+    WhiteBishopSprite.setTexture(pieceTexture);
+    WhiteBishopSprite.setTextureRect(sf::IntRect(670, 0, 314, 270));
+    WhiteBishopSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackBishopSprite;
+    BlackBishopSprite.setTexture(pieceTexture);
+    BlackBishopSprite.setTextureRect(sf::IntRect(670, 335, 314, 270));
+    BlackBishopSprite.setScale(0.34f, 0.34f);
+    for (int i = 2; i < 6; i += 3) {
+        board[0][i].SetPiece(new Bishop(sf::Vector2i(0, i), 'B', BlackBishopSprite));
+        board[7][i].SetPiece(new Bishop(sf::Vector2i(7, i), 'W', WhiteBishopSprite));
+    }
+    // Initialize Queens
+    sf::Sprite WhiteQueenSprite;
+    WhiteQueenSprite.setTexture(pieceTexture);
+    WhiteQueenSprite.setTextureRect(sf::IntRect(320, 0, 340, 270));
+    WhiteQueenSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackQueenSprite;
+    BlackQueenSprite.setTexture(pieceTexture);
+    BlackQueenSprite.setTextureRect(sf::IntRect(320, 335, 340, 270));
+    BlackQueenSprite.setScale(0.34f, 0.34f);
+    board[0][3].SetPiece(new Queen(sf::Vector2i(0, 3), 'B', BlackQueenSprite));
+    board[7][3].SetPiece(new Queen(sf::Vector2i(7, 3), 'W', WhiteQueenSprite));
+    // Initialize Kings
+    sf::Sprite WhiteKingSprite;
+    WhiteKingSprite.setTexture(pieceTexture);
+    WhiteKingSprite.setTextureRect(sf::IntRect(0, 0, 314, 270));
+    WhiteKingSprite.setScale(0.34f, 0.34f);
+
+    sf::Sprite BlackKingSprite;
+    BlackKingSprite.setTexture(pieceTexture);
+    BlackKingSprite.setTextureRect(sf::IntRect(0, 335, 314, 270));
+    BlackKingSprite.setScale(0.34f, 0.34f);
+    board[0][4].SetPiece(new King(sf::Vector2i(0, 4), 'B', BlackKingSprite));
+    board[7][4].SetPiece(new King(sf::Vector2i(7, 4), 'W', WhiteKingSprite));
+}
+
+// PRE: window is an already initialized and open sf::RenderWindow object representing the game window,
+//      transparency is a BYTE value (0-255) representing the desired level of transparency for the window, 
+//      where 0 is fully transparent and 255 is fully opaque.
+// POST: The window's transparency level is set according to transparency,
+//       the window remains functional, continues to render its contents, and responds to user interactions.
+//       the transparency value does not affect the contents within the window, only the window itself, 
+//       making it blend into the desktop with the set transparency.
+void Board::makeWindowTransparent(sf::RenderWindow& window, BYTE transparency) {
+    HWND hwnd = window.getSystemHandle();
+    SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+    SetLayeredWindowAttributes(hwnd, 0, transparency, LWA_ALPHA);
 }

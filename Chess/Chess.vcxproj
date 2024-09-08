@@ -138,6 +138,7 @@
     <ClCompile Include="king.cpp" />
     <ClCompile Include="knight.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="mainFunctions.cpp" />
     <ClCompile Include="pawn.cpp" />
     <ClCompile Include="queen.cpp" />
     <ClCompile Include="rook.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="chessPiece.hpp" />
     <ClInclude Include="king.hpp" />
     <ClInclude Include="knight.hpp" />
+    <ClInclude Include="mainFunctions.hpp" />
     <ClInclude Include="pawn.hpp" />
     <ClInclude Include="queen.hpp" />
     <ClInclude Include="rook.hpp" />
