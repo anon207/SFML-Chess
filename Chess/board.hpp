@@ -129,6 +129,11 @@ public:
     // POST: RV is either true (stalemate) or false (game in progress).
     bool checkForStalemate(bool whitesMove, int& gameState);
 
+    // PRE: whitesMove is a bool that represents whos turn it is,
+    //      gameState is an int representing the current state of the game.
+    // POST: RV is either true (draw) or false (game in progress).
+    bool checkForDrawByInsufficientMaterial(int& gameState);
+
     // PRE: window is a sf::RenderWindow which is the window where the board and pieces are displayed,
     // POST: logical display of board is displayed graphically to the window.
     void drawBoard(sf::RenderWindow& window);
@@ -140,7 +145,7 @@ public:
 
 private:
 
-    // used to represent the internal logic of the board.
+    // USED TO REPRESENT THE INTERNAL LOGIC OF THE BOARD
     Square board[8][8];
     
     // PRE:
@@ -156,14 +161,14 @@ private:
     //       making it blend into the desktop with the set transparency.
     void makeWindowTransparent(sf::RenderWindow& window, BYTE transparency);
 
-    // Piece textures
+    // PIECE TEXTURES
     sf::Texture pieceTexture;
 
-    // Used to highlight squares when a piece is moved
+    // USED TO HIGHLIGHT SQUARES WHEN A PIECE IS MOVED
     sf::Vector2i lastFromPos;
     sf::Vector2i lastToPos;
     
-    // Sounds
+    // SOUNDS
     sf::SoundBuffer invalidMove;
     sf::Sound invalidMoveSound;
 

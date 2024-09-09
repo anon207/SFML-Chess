@@ -202,7 +202,7 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
+            if (!checkForDrawByInsufficientMaterial(gameState) && !checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
@@ -339,7 +339,7 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
+            if (!checkForDrawByInsufficientMaterial(gameState) && !checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) promoteSound.play();
             whitesMove = !whitesMove;
             moveCompleted = true;
         }
@@ -396,7 +396,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(7, 7);
-                    if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
+                    if (!checkForCheckmateOrCheck(!whitesMove, gameState) && !checkForStalemate(!whitesMove, gameState)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     return (true);
                 }
@@ -450,7 +450,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(7, 0);
-                        if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
+                        if (!checkForCheckmateOrCheck(!whitesMove, gameState) && !checkForStalemate(!whitesMove, gameState)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         return (true);
                     }
@@ -480,8 +480,6 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
             board[0][6].GetPiece() == nullptr && board[0][5].GetPiece() == nullptr &&
             toPos.x == 0 && (toPos.y == 6 || toPos.y == 7)) {
 
-            std::cout << "Made it into Black castle function" << std::endl;
-
             // Check if the king would be moving through check or not
             bool passedFirstCheck = false;
             bool passedSecondCheck = false;
@@ -510,7 +508,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(0, 7);
-                    if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
+                    if (!checkForCheckmateOrCheck(!whitesMove, gameState) && !checkForStalemate(!whitesMove, gameState)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     return (true);
                 }
@@ -530,7 +528,6 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
             board[0][0].GetPiece()->getColor() == 'B' && !board[0][0].GetPiece()->getHasMoved() &&
             board[0][1].GetPiece() == nullptr && board[0][2].GetPiece() == nullptr && board[0][3].GetPiece() == nullptr &&
             toPos.x == 0 && (toPos.y == 2 || toPos.y == 1 || toPos.y == 0)) {
-
 
             // Check if the king would be moving through check or not
             bool passedFirstCheck = false;
@@ -565,7 +562,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(0, 0);
-                        if (!checkForCheckmateOrCheck(whitesMove, gameState) && !checkForStalemate(whitesMove, gameState)) castleSound.play();
+                        if (!checkForCheckmateOrCheck(!whitesMove, gameState) && !checkForStalemate(!whitesMove, gameState)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         return (true);
                     }
@@ -670,6 +667,7 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
     if (origPiece != nullptr &&
         ((origPiece->getColor() == 'W' && whitesMove) || (origPiece->getColor() == 'B' && !whitesMove)) &&
         fromPos != toPos && origPiece->validateMove(toPos, board, legalMoves)) {
+        
         if (destPiece != nullptr && destPiece->getColor() != origPiece->getColor()) {
             board[toPos.x][toPos.y].Clear();
             playCaptureSound = true;
@@ -685,8 +683,8 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
 
         updateLastMovedPiece(origPiece);
 
-        if (!checkForStalemate(whitesMove, gameState)) {
-            if (!checkForCheckmateOrCheck(whitesMove, gameState)) {
+        if (!checkForCheckmateOrCheck(whitesMove, gameState)) {
+            if (!checkForStalemate(whitesMove, gameState)) {
                 if (playCaptureSound) {
                     captureSound.play();
                 }
@@ -694,6 +692,7 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
                     if (origPiece->getColor() == 'W') moveWhiteSound.play();
                     if (origPiece->getColor() == 'B') moveBlackSound.play();
                 }
+                checkForDrawByInsufficientMaterial(gameState);
             }
         }
 
@@ -728,6 +727,7 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
             }
         }
     }
+
     bool moveCompleted = false;
 
     ChessPiece* origPiece = board[fromPos.x][fromPos.y].GetPiece();
@@ -861,8 +861,8 @@ bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState) {
 }
 
 // PRE: whitesMove is a bool that represents whos turn it is,
-    //      gameState is an int representing the current state of the game.
-    // POST: RV is either true (stalemate) or false (game in progress).
+//      gameState is an int representing the current state of the game.
+// POST: RV is either true (stalemate) or false (game in progress).
 bool Board::checkForStalemate(bool whitesMove, int& gameState) {
     std::unordered_map<std::string, std::vector<sf::Vector2i>> otherColorLegalMoves = getLegalMoves(!whitesMove);
 
@@ -880,6 +880,95 @@ bool Board::checkForStalemate(bool whitesMove, int& gameState) {
             return (true);
         }
     }
+    return (false);
+}
+
+// PRE: whitesMove is a bool that represents whos turn it is,
+//      gameState is an int representing the current state of the game.
+// POST: RV is either true (draw) or false (game in progress).
+bool Board::checkForDrawByInsufficientMaterial(int& gameState) {
+
+    std::unordered_map<std::string, int> whitePieces;
+    std::unordered_map<std::string, int> blackPieces;
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* piece = board[row][col].GetPiece();
+            if (piece != nullptr) {
+                if (piece->getColor() == 'W') {
+                    whitePieces[piece->getType()]++;
+                }
+                else {
+                    blackPieces[piece->getType()]++;
+                }
+            }
+        }
+    }
+
+    // Check for King vs King
+    bool drawByKingVsKing =
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 0 && blackPieces["B"] == 0 &&
+        whitePieces["N"] == 0 && blackPieces["N"] == 0;
+
+    // Check for King and Bishop vs king
+    bool drawByKingBishopVsKingWhite = 
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 1 && blackPieces["B"] == 0 &&
+        whitePieces["N"] == 0 && blackPieces["N"] == 0;
+
+    bool drawByKingBishopVsKingBlack =
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 0 && blackPieces["B"] == 1 &&
+        whitePieces["N"] == 0 && blackPieces["N"] == 0;
+
+    // Check for King and Knight vs king
+    bool drawByKingKnightVsKingWhite =
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 0 && blackPieces["B"] == 0 &&
+        whitePieces["N"] == 1 && blackPieces["N"] == 0;
+
+    bool drawByKingKnightVsKingBlack =
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 0 && blackPieces["B"] == 0 &&
+        whitePieces["N"] == 0 && blackPieces["N"] == 1;
+
+    // Check for King and Bishop vs King and Bishop
+    bool drawByKingBishopVsKingBishop =
+        whitePieces["R"] == 0 && blackPieces["R"] == 0 &&
+        whitePieces["P"] == 0 && blackPieces["P"] == 0 &&
+        whitePieces["K"] == blackPieces["K"] &&
+        whitePieces["Q"] == 0 && blackPieces["Q"] == 0 &&
+        whitePieces["B"] == 1 && blackPieces["B"] == 1 &&
+        whitePieces["N"] == 0 && blackPieces["N"] == 0;
+
+    if (drawByKingVsKing ||
+        drawByKingBishopVsKingWhite ||
+        drawByKingBishopVsKingBlack ||
+        drawByKingKnightVsKingWhite ||
+        drawByKingKnightVsKingBlack ||
+        drawByKingBishopVsKingBishop) {
+
+        gameEndSound.play();
+        gameState = 2;
+        return (true);
+    }
+
     return (false);
 }
 
@@ -974,6 +1063,7 @@ void Board::InitializePieces() {
         board[0][i].SetPiece(new Rook(sf::Vector2i(0, i), 'B', BlackRookSprite));
         board[7][i].SetPiece(new Rook(sf::Vector2i(7, i), 'W', WhiteRookSprite));
     }
+
     // Initialize Knights
     sf::Sprite WhiteKnightSprite;
     WhiteKnightSprite.setTexture(pieceTexture);
@@ -988,6 +1078,7 @@ void Board::InitializePieces() {
         board[0][i].SetPiece(new Knight(sf::Vector2i(0, i), 'B', BlackKnightSprite));
         board[7][i].SetPiece(new Knight(sf::Vector2i(7, i), 'W', WhiteKnightSprite));
     }
+
     // Initialize Bishops
     sf::Sprite WhiteBishopSprite;
     WhiteBishopSprite.setTexture(pieceTexture);
@@ -1002,6 +1093,7 @@ void Board::InitializePieces() {
         board[0][i].SetPiece(new Bishop(sf::Vector2i(0, i), 'B', BlackBishopSprite));
         board[7][i].SetPiece(new Bishop(sf::Vector2i(7, i), 'W', WhiteBishopSprite));
     }
+
     // Initialize Queens
     sf::Sprite WhiteQueenSprite;
     WhiteQueenSprite.setTexture(pieceTexture);
@@ -1014,6 +1106,7 @@ void Board::InitializePieces() {
     BlackQueenSprite.setScale(0.34f, 0.34f);
     board[0][3].SetPiece(new Queen(sf::Vector2i(0, 3), 'B', BlackQueenSprite));
     board[7][3].SetPiece(new Queen(sf::Vector2i(7, 3), 'W', WhiteQueenSprite));
+
     // Initialize Kings
     sf::Sprite WhiteKingSprite;
     WhiteKingSprite.setTexture(pieceTexture);

@@ -1,4 +1,5 @@
 #include "rook.hpp"
+#include <iostream>
 
 // CONSTRUCTOR
 // PRE: pos is the rooks position on the board,
@@ -35,7 +36,7 @@ bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 	auto it = std::find(rookMoves.begin(), rookMoves.end(), moveToPosition);
 
 	if (it != rookMoves.end()) {
-		hasMoved = true;
+		board[position.x][position.y].GetPiece()->setHasMoved(true);
 		return (true);
 	}
 	

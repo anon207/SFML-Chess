@@ -89,7 +89,7 @@ void showCheckmatePopup(bool& resetGame, bool& quitGame, bool whitesMove) {
 // POST: the game is either reset or closed.
 void showStaleMatePopup(bool& resetGame, bool& quitGame, bool whitesMove) {
     // Create a pop-up window
-    sf::RenderWindow popup(sf::VideoMode(300, 200), "Checkmate", sf::Style::None);
+    sf::RenderWindow popup(sf::VideoMode(300, 200), "Stalemate", sf::Style::None);
 
     // Load font for text
     sf::Font font;
@@ -122,6 +122,87 @@ void showStaleMatePopup(bool& resetGame, bool& quitGame, bool whitesMove) {
 
     // Create the smaller text for "wins by checkmate"
     sf::Text subText("Game drawn by stalemate", font, 18);
+    subText.setPosition(50, 60);
+    subText.setFillColor(sf::Color::Black);
+
+    // Main loop for the pop-up window
+    while (popup.isOpen()) {
+        sf::Event event;
+        while (popup.pollEvent(event)) {
+            if (event.type == sf::Event::Closed) {
+                popup.requestFocus();
+                popup.close();
+            }
+
+            if (event.type == sf::Event::MouseButtonPressed) {
+                sf::Vector2i mousePos = sf::Mouse::getPosition(popup);
+
+                // Check if "Quit" button is clicked
+                if (quitButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                    quitGame = true;
+                    popup.close();
+                }
+
+                // Check if "Play Again" button is clicked
+                if (playAgainButton.getGlobalBounds().contains(mousePos.x, mousePos.y)) {
+                    resetGame = true;
+                    popup.close();
+                }
+            }
+        }
+
+        popup.requestFocus();
+        popup.clear(sf::Color::White);
+        popup.draw(quitButton);
+        popup.draw(playAgainButton);
+        popup.draw(quitText);
+        popup.draw(playAgainText);
+        popup.draw(mainText);
+        popup.draw(subText);
+        popup.display();
+    }
+}
+
+// PRE: resetGame is a boolean value that is true iff the user clicks the "play again" button,
+//		quitGame is a boolean value that is true iff the user clicks the "quit" button,
+//		whitesMove is a boolean value that is true iff it is whites move and false iff
+//		it is blacks move
+// POST: the game is either reset or closed.
+void showDrawByInsufficientMaterialPopup(bool& resetGame, bool& quitGame, bool whitesMove) {
+    // Create a pop-up window
+    sf::RenderWindow popup(sf::VideoMode(300, 200), "Draw", sf::Style::None);
+
+    // Load font for text
+    sf::Font font;
+    if (!font.loadFromFile("assets/RobotoCondensed-Black.ttf")) {
+        // Handle font loading error if necessary
+        return;
+    }
+
+    // Create "Quit" button
+    sf::RectangleShape quitButton(sf::Vector2f(120, 50));
+    quitButton.setPosition(30, 120);
+    quitButton.setFillColor(sf::Color::Red);
+
+    // Create "Play Again" button
+    sf::RectangleShape playAgainButton(sf::Vector2f(120, 50));
+    playAgainButton.setPosition(150, 120);
+    playAgainButton.setFillColor(sf::Color::Green);
+
+    // Create text labels for buttons
+    sf::Text quitText("Quit", font, 20);
+    quitText.setPosition(60, 130);
+
+    sf::Text playAgainText("Play Again", font, 20);
+    playAgainText.setPosition(160, 130);
+
+    // Create the main text displaying which color won
+    sf::Text mainText("Draw!", font, 24);
+    mainText.setPosition(50, 20);
+    mainText.setFillColor(sf::Color::Black);
+
+    // Create the smaller text for "wins by checkmate"
+    sf::Text subText("Game drawn by insufficient material", font, 18);
     subText.setPosition(50, 60);
     subText.setFillColor(sf::Color::Black);
 
@@ -208,6 +289,36 @@ void checkForStalemate(int& gameState, sf::RenderWindow& window, bool& whitesMov
         bool quitGame = false;
         window.setActive(false);
         showStaleMatePopup(resetGame, quitGame, whitesMove);
+
+        if (quitGame) {
+            window.close();
+        }
+        else if (resetGame) {
+            board.resetBoard();
+            whitesMove = true;
+            gameState = 0;
+            gameStartSound.play();
+        }
+        window.setActive(true);
+        window.requestFocus();
+    }
+}
+
+// PRE: gameState is an int that represents the current state of the game,
+//		window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+//		whitesMove is a boolean value that is true iff it is whites move and false iff
+//		it is blacks move,
+//		board is a 8 x 8 matrix of Square objects representing the chess board,
+//		gameStartSound is an sf::Sound that plays the game-start sound
+// POST: draw by insufficient material is checked for, either showDrawByInsufficientMaterialPopup is called,
+//       or the game continues
+void checkForDrawByInsufficientMaterial(int& gameState, sf::RenderWindow& window, bool& whitesMove, Board& board, sf::Sound& gameStartSound) {
+    if (gameState == 2) {
+
+        bool resetGame = false;
+        bool quitGame = false;
+        window.setActive(false);
+        showDrawByInsufficientMaterialPopup(resetGame, quitGame, whitesMove);
 
         if (quitGame) {
             window.close();
@@ -326,9 +437,11 @@ void mainLoop(sf::RenderWindow& window, bool clickProcessed, Board& board, sf::V
         board.drawBoard(window);
         window.display();
 
-        // Check if checkmate or stalemate occurred
+        // Check if checkmate, stalemate or a draw occurred
         checkForCheckmate(gameState, window, whitesMove, board, gameStartSound);
 
         checkForStalemate(gameState, window, whitesMove, board, gameStartSound);
+
+        checkForDrawByInsufficientMaterial(gameState, window, whitesMove, board, gameStartSound);
     }
 }

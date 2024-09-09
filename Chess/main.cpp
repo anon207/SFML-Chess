@@ -21,7 +21,7 @@ int main() {
     bool clickProcessed = false;
     bool whitesMove = true;
 
-    int gameState = 0; // 0 == in-progress, 1 == checkMate, 2 == draw, 3 == staleMate
+    int gameState = 0; // 0 == in-progress, 1 == checkMate, 2 == draw by insufficient material, 3 == staleMate
     const int squareSize = 100;
 
     mainLoop(window, clickProcessed, board, selectedPiece, whitesMove, gameState, gameStartSound, font, squareSize);

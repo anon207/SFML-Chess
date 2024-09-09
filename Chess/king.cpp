@@ -35,7 +35,7 @@ bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8]
 	auto it = std::find(kingMoves.begin(), kingMoves.end(), moveToPosition);
 
 	if (it != kingMoves.end()) {
-		hasMoved = true;
+		board[position.x][position.y].GetPiece()->setHasMoved(true);
 		return (true);
 	}
 

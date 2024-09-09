@@ -19,6 +19,13 @@ void showCheckmatePopup(bool& resetGame, bool& quitGame, bool whitesMove);
 // POST: the game is either reset or closed.
 void showStaleMatePopup(bool& resetGame, bool& quitGame, bool whitesMove);
 
+// PRE: resetGame is a boolean value that is true iff the user clicks the "play again" button,
+//		quitGame is a boolean value that is true iff the user clicks the "quit" button,
+//		whitesMove is a boolean value that is true iff it is whites move and false iff
+//		it is blacks move
+// POST: the game is either reset or closed.
+void showDrawByInsufficientMaterialPopup(bool& resetGame, bool& quitGame, bool whitesMove);
+
 // PRE: gameState is an int that represents the current state of the game,
 //		window is a sf::RenderWindow which is the window where the board and pieces are displayed,
 //		whitesMove is a boolean value that is true iff it is whites move and false iff
@@ -38,6 +45,17 @@ void checkForCheckmate(int& gameState, sf::RenderWindow& window, bool& whitesMov
 // POST: stalemate is checked for, either showStalematePopup is called, or
 //		 the game continues
 void checkForStalemate(int& gameState, sf::RenderWindow& window, bool& whitesMove, Board& board, sf::Sound& gameStartSound);
+
+// PRE: gameState is an int that represents the current state of the game,
+//		window is a sf::RenderWindow which is the window where the board and pieces are displayed,
+//		whitesMove is a boolean value that is true iff it is whites move and false iff
+//		it is blacks move,
+//		board is a 8 x 8 matrix of Square objects representing the chess board,
+//		gameStartSound is an sf::Sound that plays the game-start sound
+// POST: draw by insufficient material is checked for, either showDrawByInsufficientMaterialPopup is called,
+//       or the game continues
+void checkForDrawByInsufficientMaterial(int& gameState, sf::RenderWindow& window, bool& whitesMove, Board& board, sf::Sound& gameStartSound);
+
 
 // PRE: font is an sf::Font that determines the styling of the numbers and letters on the rows
 //		and columns of the board,
