@@ -20,11 +20,12 @@ int main() {
 
     bool clickProcessed = false;
     bool whitesMove = true;
-
-    int gameState = 0; // 0 == in-progress, 1 == checkMate, 2 == draw by insufficient material, 3 == staleMate
+    
+    int gameType = 2; // 0 == person vs person, 1 == person vs Markybot, 2 == Markybot vs Markybot
+    int gameState = 0; // 0 == in-progress, 1 == checkMate, 2 == draw by insufficient material, 3 == staleMate, 4 == draw by repitition, 5 == draw by fiftyMoveRule
     const int squareSize = 100;
 
-    mainLoop(window, clickProcessed, board, selectedPiece, whitesMove, gameState, gameStartSound, font, squareSize);
+    mainLoop(window, clickProcessed, board, selectedPiece, whitesMove, gameState, gameStartSound, font, squareSize, gameType);
 
     return (0);
 }

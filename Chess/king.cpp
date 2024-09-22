@@ -28,9 +28,11 @@ King::~King() {
 // POST: RV = true iff the move is valid or false iff the move is invalid
 bool King::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
-	if (legalMoves["K"].empty()) return (false);
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
 
-	const std::vector<sf::Vector2i>& kingMoves = legalMoves["K"];
+	if (legalMoves[posKey].empty()) return (false);
+
+	const std::vector<sf::Vector2i>& kingMoves = legalMoves[posKey];
 
 	auto it = std::find(kingMoves.begin(), kingMoves.end(), moveToPosition);
 
@@ -107,6 +109,8 @@ bool King::canPieceSeeTheKing(Square(&board)[8][8]) const {
 // POST: legalMoves now contains all the legal moves of the ChessPiece type object.
 void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
 	
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
+
 	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
 	
 	// Moving king up
@@ -116,7 +120,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x - 1][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x - 1][position.y].SetPiece(pieceAbove);
@@ -129,7 +133,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x + 1][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x + 1][position.y].SetPiece(pieceBelow);
@@ -142,7 +146,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x][position.y - 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x, position.y - 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y - 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x][position.y - 1].SetPiece(pieceLeft);
@@ -155,7 +159,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x][position.y + 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x, position.y + 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y + 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x][position.y + 1].SetPiece(pieceRight);
@@ -168,7 +172,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x - 1][position.y + 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y + 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y + 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x - 1][position.y + 1].SetPiece(pieceAboveRight);
@@ -181,7 +185,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x - 1][position.y - 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y - 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y - 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x - 1][position.y - 1].SetPiece(pieceAboveLeft);
@@ -194,7 +198,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x + 1][position.y - 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y - 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y - 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x + 1][position.y - 1].SetPiece(pieceBelowLeft);
@@ -207,7 +211,7 @@ void King::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x + 1][position.y + 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y + 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y + 1));
 			}
 			board[position.x][position.y].SetPiece(origPiece);
 			board[position.x + 1][position.y + 1].SetPiece(pieceBelowRight);

@@ -28,9 +28,11 @@ Pawn::~Pawn() {
 // POST: RV = true iff the move is valid or false iff the move is invalid
 bool Pawn::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
-	if (legalMoves["P"].empty()) return (false);
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
 
-	const std::vector<sf::Vector2i>& pawnMoves = legalMoves["P"];
+	if (legalMoves[posKey].empty()) return (false);
+
+	const std::vector<sf::Vector2i>& pawnMoves = legalMoves[posKey];
 
 	auto it = std::find(pawnMoves.begin(), pawnMoves.end(), moveToPosition);
 
@@ -91,6 +93,9 @@ bool Pawn::canPieceSeeTheKing(Square(&board)[8][8]) const {
 //      iff its blacks turn.
 // POST: legalMoves now contains all the legal moves of the ChessPiece type object.
 void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
+	
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
+
 	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
 	
 	if (color == 'W') {
@@ -101,7 +106,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x - 1][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y));
 			}
 			board[position.x - 1][position.y].Clear();
 			board[position.x][position.y].SetPiece(origPiece);
@@ -111,7 +116,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x - 2][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 2, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 2, position.y));
 			}
 			board[position.x - 2][position.y].Clear();
 			board[position.x][position.y].SetPiece(origPiece);
@@ -123,7 +128,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x - 1][position.y - 1].Clear();
 			board[position.x - 1][position.y - 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y - 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y - 1));
 			}
 			board[position.x - 1][position.y - 1].Clear();
 			board[position.x - 1][position.y - 1].SetPiece(pieceAboveLeft);
@@ -136,7 +141,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x - 1][position.y + 1].Clear();
 			board[position.x - 1][position.y + 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x - 1, position.y + 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x - 1, position.y + 1));
 			}
 			board[position.x - 1][position.y + 1].Clear();
 			board[position.x - 1][position.y + 1].SetPiece(pieceAboveRight);
@@ -152,7 +157,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x + 1][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y));
 			}
 			board[position.x + 1][position.y].Clear();
 			board[position.x][position.y].SetPiece(origPiece);
@@ -162,7 +167,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x][position.y].Clear();
 			board[position.x + 2][position.y].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 2, position.y));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 2, position.y));
 			}
 			board[position.x + 2][position.y].Clear();
 			board[position.x][position.y].SetPiece(origPiece);
@@ -174,7 +179,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x + 1][position.y - 1].Clear();
 			board[position.x + 1][position.y - 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y - 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y - 1));
 			}
 			board[position.x + 1][position.y - 1].Clear();
 			board[position.x + 1][position.y - 1].SetPiece(pieceAboveLeft);
@@ -187,7 +192,7 @@ void Pawn::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 			board[position.x + 1][position.y + 1].Clear();
 			board[position.x + 1][position.y + 1].SetPiece(origPiece);
 			if (!Board::isKingInCheck(!whitesMove, board)) {
-				legalMoves[type].push_back(sf::Vector2i(position.x + 1, position.y + 1));
+				legalMoves[posKey].push_back(sf::Vector2i(position.x + 1, position.y + 1));
 			}
 			board[position.x + 1][position.y + 1].Clear();
 			board[position.x + 1][position.y + 1].SetPiece(pieceAboveRight);

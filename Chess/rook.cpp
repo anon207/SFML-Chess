@@ -29,9 +29,11 @@ Rook::~Rook() {
 // POST: RV = true iff the move is valid or false iff the move is invalid
 bool Rook::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
-	if (legalMoves["R"].empty()) return (false);
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
 
-	const std::vector<sf::Vector2i>& rookMoves = legalMoves["R"];
+	if (legalMoves[posKey].empty()) return (false);
+
+	const std::vector<sf::Vector2i>& rookMoves = legalMoves[posKey];
 
 	auto it = std::find(rookMoves.begin(), rookMoves.end(), moveToPosition);
 
@@ -90,6 +92,8 @@ bool Rook::canPieceSeeTheKing(Square(&board)[8][8]) const {
 // POST: legalMoves now contains all the legal moves of the ChessPiece type object.
 void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
 	
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
+
 	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
 	
 	// all legal moves where rook can move upwards
@@ -101,7 +105,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 				board[position.x - i + 1][position.y].Clear();
 				board[position.x - i][position.y].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y));
 				}
 				board[position.x - i][position.y].SetPiece(otherPiece);
 			}
@@ -111,7 +115,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 		board[position.x - i][position.y].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y));
 		}
 		i++;
 	}
@@ -127,7 +131,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 				board[position.x + i - 1][position.y].Clear();
 				board[position.x + i][position.y].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y));
 				}
 				board[position.x + i][position.y].SetPiece(otherPiece);
 			}
@@ -137,7 +141,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 		board[position.x + i][position.y].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y));
 		}
 		i++;
 	}
@@ -153,7 +157,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 				board[position.x][position.y - i + 1].Clear();
 				board[position.x][position.y - i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x, position.y - i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y - i));
 				}
 				board[position.x][position.y - i].SetPiece(otherPiece);
 			}
@@ -163,7 +167,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 		board[position.x][position.y - i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x, position.y - i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y - i));
 		}
 		i++;
 	}
@@ -179,7 +183,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 				board[position.x][position.y + i - 1].Clear();
 				board[position.x][position.y + i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x, position.y + i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y + i));
 				}
 				board[position.x][position.y + i].SetPiece(otherPiece);
 			}
@@ -189,7 +193,7 @@ void Rook::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2
 		board[position.x][position.y + i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x, position.y + i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x, position.y + i));
 		}
 		i++;
 	}

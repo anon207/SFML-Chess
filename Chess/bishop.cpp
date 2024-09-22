@@ -27,9 +27,11 @@ Bishop::~Bishop() {
 // POST: RV = true iff the move is valid or false iff the move is invalid
 bool Bishop::validateMove(const sf::Vector2i& moveToPosition, Square(&board)[8][8], std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) const {
 	
-	if (legalMoves["B"].empty()) return (false);
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
 
-	const std::vector<sf::Vector2i>& bishopMoves = legalMoves["B"];
+	if (legalMoves[posKey].empty()) return (false);
+
+	const std::vector<sf::Vector2i>& bishopMoves = legalMoves[posKey];
 
 	auto it = std::find(bishopMoves.begin(), bishopMoves.end(), moveToPosition);
 
@@ -87,6 +89,8 @@ bool Bishop::canPieceSeeTheKing(Square(&board)[8][8]) const {
 // POST: legalMoves now contains all the legal moves of the ChessPiece type object.
 void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const {
 	
+	std::string posKey = type + std::to_string(position.x) + std::to_string(position.y);
+
 	ChessPiece* origPiece = board[position.x][position.y].GetPiece();
 
 	// all legal moves where Bishop can move up and left
@@ -98,7 +102,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 				board[position.x - i + 1][position.y - i + 1].Clear();
 				board[position.x - i][position.y - i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y - i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y - i));
 				}
 				board[position.x - i][position.y - i].SetPiece(otherPiece);
 			}
@@ -108,7 +112,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 		board[position.x - i][position.y - i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y - i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y - i));
 		}
 		i++;
 	}
@@ -124,7 +128,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 				board[position.x - i + 1][position.y + i - 1].Clear();
 				board[position.x - i][position.y + i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y + i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y + i));
 				}
 				board[position.x - i][position.y + i].SetPiece(otherPiece);
 			}
@@ -134,7 +138,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 		board[position.x - i][position.y + i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x - i, position.y + i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x - i, position.y + i));
 		}
 		i++;
 	}
@@ -150,7 +154,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 				board[position.x + i - 1][position.y + i - 1].Clear();
 				board[position.x + i][position.y + i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y + i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y + i));
 				}
 				board[position.x + i][position.y + i].SetPiece(otherPiece);
 			}
@@ -160,7 +164,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 		board[position.x + i][position.y + i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y + i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y + i));
 		}
 		i++;
 	}
@@ -176,7 +180,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 				board[position.x + i - 1][position.y - i + 1].Clear();
 				board[position.x + i][position.y - i].SetPiece(origPiece);
 				if (!Board::isKingInCheck(!whitesMove, board)) {
-					legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y - i));
+					legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y - i));
 				}
 				board[position.x + i][position.y - i].SetPiece(otherPiece);
 			}
@@ -186,7 +190,7 @@ void Bishop::allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vecto
 		board[position.x + i][position.y - i].SetPiece(origPiece);
 		// check if same color king is in check after making a move
 		if (!Board::isKingInCheck(!whitesMove, board)) {
-			legalMoves[type].push_back(sf::Vector2i(position.x + i, position.y - i));
+			legalMoves[posKey].push_back(sf::Vector2i(position.x + i, position.y - i));
 		}
 		i++;
 	}

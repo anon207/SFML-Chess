@@ -104,6 +104,10 @@ public:
     //       keys = piece type, values = vectors of sf::Vector2i's representing valid positions
     //       to move to.
     std::unordered_map<std::string, std::vector<sf::Vector2i>> getLegalMoves(bool whitesMove);
+
+    // PRE:
+    // POST:
+    void addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, bool whitesMove, int gameState);
     
     // PRE: origPiece is a ChessPiece object that is not null,
     // POST: updates the most recently moved piece as the last moved piece
@@ -122,17 +126,33 @@ public:
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
     // POST: RV is either true (Checkmate or check) or false (game in progress).
-    bool checkForCheckmateOrCheck(bool whitesMove, int& gameState);
+    bool checkForCheckmateOrCheck(bool whitesMove, int& gameState, bool insideCheckFunction);
 
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
     // POST: RV is either true (stalemate) or false (game in progress).
-    bool checkForStalemate(bool whitesMove, int& gameState);
+    bool checkForStalemate(bool whitesMove, int& gameState, bool insideCheckFunction);
 
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
     // POST: RV is either true (draw) or false (game in progress).
     bool checkForDrawByInsufficientMaterial(int& gameState);
+
+    // PRE:
+    // POST: RV = string representing the positions of pieces on the board
+    std::string generateBoardState();
+    
+    // PRE:
+    // POST: positionCounts is incremented at the appropriate location matching the board's position
+    void updatePositionCounts();
+
+    // PRE: gameState is an int representing the current state of the game.
+    // POST: RV is either true (draw) or false (game in progress).
+    bool checkForDrawByRepetition(int& gameState);
+
+    // PRE: gameState is an int representing the current state of the game.
+    // POST: RV is either true (draw) or false (game in progress).
+    bool checkForDrawByFiftyMoveRule(int& gameState);
 
     // PRE: window is a sf::RenderWindow which is the window where the board and pieces are displayed,
     // POST: logical display of board is displayed graphically to the window.
@@ -147,6 +167,12 @@ private:
 
     // USED TO REPRESENT THE INTERNAL LOGIC OF THE BOARD
     Square board[8][8];
+
+    // USED TO CHECK FOR DRAW BY REPITITION
+    std::unordered_map<std::string, int> positionCounts;
+
+    // USED TO CHECK FOR DRAW BY FIFTY MOVE RULE
+    int fiftyMoveCounter; 
     
     // PRE:
     // POST: All pieces are placed on their defualt squares and initilized correctly.
@@ -195,6 +221,9 @@ private:
 
     sf::SoundBuffer gameEnd;
     sf::Sound gameEndSound;
+
+    sf::SoundBuffer bell;
+    sf::Sound bellSound;
 };
 
 #endif
