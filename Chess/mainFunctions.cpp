@@ -616,58 +616,85 @@ void drawLettersNumbersAndSquares(sf::Font font, int squareSize, sf::RenderWindo
 // POST:
 void MarkybotVsMarkyBot(bool& whitesMove, Board& board, sf::RenderWindow& window ,int gameState, bool& clickProcessed, sf::Font font, int squareSize, sf::Sound& gameStartSound) {
 
-        std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-        // Find all legal moves
-        std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = board.getLegalMoves(whitesMove);
+    // Find all legal moves
+    std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = board.getLegalMoves(whitesMove);
         
-        // Add castling to legal moves if it is possible
-        board.addCastlingToLegalMoves(legalMoves, whitesMove, gameState);
+    // Add castling to legal moves if it is possible
+    board.addCastlingToLegalMoves(legalMoves, whitesMove, gameState);
+
+    board.addEnPassantToLegalMoves(legalMoves, whitesMove);
         
-        if (legalMoves.empty()) return;
+    if (legalMoves.empty()) return;
 
-        sf::sleep(sf::milliseconds(50));
+    sf::sleep(sf::milliseconds(1));
 
-        std::vector<std::pair<sf::Vector2i, sf::Vector2i>> allMoves;
+    std::vector<std::pair<sf::Vector2i, sf::Vector2i>> allMoves;
 
-        for (const auto& entry : legalMoves) {
-            const std::string& piecePos = entry.first;
-            const std::vector<sf::Vector2i>& moves = entry.second;
+    for (const auto& entry : legalMoves) {
+        const std::string& piecePos = entry.first;
+        const std::vector<sf::Vector2i>& moves = entry.second;
 
-            std::string xStr = piecePos.substr(piecePos.length() - 2, 1);
-            std::string yStr = piecePos.substr(piecePos.length() - 1, 1);
+        std::string xStr = piecePos.substr(piecePos.length() - 2, 1);
+        std::string yStr = piecePos.substr(piecePos.length() - 1, 1);
 
-            int x = std::stoi(xStr);
-            int y = std::stoi(yStr);
+        int x = std::stoi(xStr);
+        int y = std::stoi(yStr);
 
             
-            sf::Vector2i startPos(x, y);
+        sf::Vector2i startPos(x, y);
 
-            for (const sf::Vector2i& endPos : moves) {
-                allMoves.emplace_back(startPos, endPos);
-            }
+        for (const sf::Vector2i& endPos : moves) {
+            allMoves.emplace_back(startPos, endPos);
         }
+    }
 
-        int randomMoveIndex = std::rand() % legalMoves.size();
-        sf::Vector2i selectedPiece = allMoves[randomMoveIndex].first;
-        sf::Vector2i toPos = allMoves[randomMoveIndex].second;
+    int randomMoveIndex = std::rand() % legalMoves.size();
+    sf::Vector2i selectedPiece = allMoves[randomMoveIndex].first;
+    sf::Vector2i toPos = allMoves[randomMoveIndex].second;
 
-        board.MovePiece(selectedPiece, toPos, whitesMove, window, gameState);
+    board.MovePiece(selectedPiece, toPos, whitesMove, window, gameState, false);
 
-        window.clear(sf::Color::White);  // Clear the window with a white background (or any desired color)
-        drawLettersNumbersAndSquares(font, squareSize, window); // Redraw the labels and board setup
-        board.drawBoard(window); // Draw the board and pieces
-        window.display();
+    window.clear(sf::Color::White);  // Clear the window with a white background (or any desired color)
+    drawLettersNumbersAndSquares(font, squareSize, window); // Redraw the labels and board setup
+    board.drawBoard(window); // Draw the board and pieces
+    window.display();
 
-        checkForCheckmate(gameState, window, whitesMove, board, gameStartSound);
+    checkForCheckmate(gameState, window, whitesMove, board, gameStartSound);
 
-        checkForStalemate(gameState, window, whitesMove, board, gameStartSound);
+    checkForStalemate(gameState, window, whitesMove, board, gameStartSound);
 
-        checkForDrawByInsufficientMaterial(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByInsufficientMaterial(gameState, window, whitesMove, board, gameStartSound);
 
-        checkForDrawByRepitition(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByRepitition(gameState, window, whitesMove, board, gameStartSound);
 
-        checkForDrawByFiftyMoveRule(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByFiftyMoveRule(gameState, window, whitesMove, board, gameStartSound);
+        // Calculate the depth for the minimax algorithm (adjustable)
+    /*int depth = 1;  // You can set this to any depth you'd like (higher values make the AI stronger but slower)
+    
+    // Add castling and en passant moves to legal moves if they are possible
+    std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = board.getLegalMoves(whitesMove);
+    board.addCastlingToLegalMoves(legalMoves, whitesMove, gameState);
+    board.addEnPassantToLegalMoves(legalMoves, whitesMove);
+
+    if (legalMoves.empty()) return;  // No legal moves means the game might be over
+
+    // Call the best move function instead of selecting a random move
+    board.makeBestMove(board, whitesMove, depth, gameState, window, legalMoves);
+    board.DisplayBoard(board);
+    // Clear the window and redraw everything
+    window.clear(sf::Color::White);  // Clear the window with a white background (or any desired color)
+    drawLettersNumbersAndSquares(font, squareSize, window);  // Redraw the labels and board setup
+    board.drawBoard(window);  // Draw the board and pieces
+    window.display();
+
+    // Check for game-ending conditions
+    checkForCheckmate(gameState, window, whitesMove, board, gameStartSound);
+    checkForStalemate(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByInsufficientMaterial(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByRepitition(gameState, window, whitesMove, board, gameStartSound);
+    checkForDrawByFiftyMoveRule(gameState, window, whitesMove, board, gameStartSound);*/
 }
 
 // PRE:
@@ -676,7 +703,7 @@ void playerVsPlayer(bool clickProcessed, sf::Event event, sf::RenderWindow& wind
     if (!clickProcessed && event.type == sf::Event::MouseButtonPressed) {
         if (event.mouseButton.button == sf::Mouse::Left) {
             sf::Vector2i mousePosition = sf::Mouse::getPosition(window);
-            sf::Vector2i boardPosition = board.GetBoardPosition(mousePosition, window.getSize().x);
+            sf::Vector2i boardPosition = board.GetBoardPosition(mousePosition, window.getSize().x, window.getSize().y);
 
             if (selectedPiece.x == -1 && selectedPiece.y == -1) {
                 // First click: Select piece
@@ -686,8 +713,7 @@ void playerVsPlayer(bool clickProcessed, sf::Event event, sf::RenderWindow& wind
             }
             else {
                 // Second click: Attempt to move the piece
-
-                if (board.MovePiece(selectedPiece, boardPosition, whitesMove, window, gameState)) {
+                if (board.MovePiece(selectedPiece, boardPosition, whitesMove, window, gameState, true)) {
                     window.clear(sf::Color::White);
                     drawLettersNumbersAndSquares(font, squareSize, window);
                     board.drawBoard(window);
@@ -733,12 +759,12 @@ void mainLoop(sf::RenderWindow& window, bool clickProcessed, Board& board, sf::V
             if (event.type == sf::Event::Closed) {
                 window.close();
             }
-            if (gameType == 0) {
+            if (gameType == 0 || (gameType == 1 && whitesMove)) {
                 playerVsPlayer(clickProcessed, event, window, board, selectedPiece, whitesMove, gameState, font, gameStartSound, squareSize);
             }
         }
         
-        if (!clickProcessed && gameState == 0 && gameType == 2) {
+        if (!clickProcessed && (gameState == 0 && gameType == 2) || (gameState == 0 && gameType == 1 && !whitesMove)) {
             MarkybotVsMarkyBot(whitesMove, board, window, gameState, clickProcessed, font, squareSize, gameStartSound);
         }
         clickProcessed = false;

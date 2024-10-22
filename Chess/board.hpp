@@ -22,6 +22,16 @@ public:
     // POST:
     virtual ~Board();
 
+    // Overloading the subscript operator for non-const access
+    Square* operator[](int row);
+
+    // Overloading the subscript operator for const access
+    const Square* operator[](int row) const;
+
+    // PRE:
+    // POST:
+    Board& operator=(Board& other);
+
     // PRE: 
     // POST: All Pieces on board are deleted and re-initilized along with
     //       lastFromPos and lastToPos being reset to (-1, -1).
@@ -37,7 +47,7 @@ public:
     //      gameState is an int representing the current state of the game
     // POST: white pawn is promoted to one of four pieces- queen, bishop, rook, knight,
     //       or move is invalid.
-    bool checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState);
+    bool checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer);
     
     // PRE: origPiece is a ChessPiece object that could be null, 
     //      whitesMove is a bool that represents whos turn it is, 
@@ -49,7 +59,7 @@ public:
     //      gameState is an int representing the current state of the game
     // POST: Black pawn is promoted to one of four pieces- queen, bishop, rook, knight,
     //       or move is invalid.
-    bool checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState);
+    bool checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer);
     
     // PRE: origPiece is a ChessPiece object that could be null, 
     //      whitesMove is a bool that represents whos turn it is, 
@@ -81,7 +91,7 @@ public:
     //      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
     //      gameState is an int representing the current state of the game
     // POST: Move is completed or move is invalid.
-    bool checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState);
+    bool checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer);
     
     // PRE: fromPos is a sf::Vector2i representing where the piece is moving from,
     //      toPos is a sf::Vector2i representing where the piece is moving to,
@@ -91,8 +101,16 @@ public:
     //      gameState is an int representing the current state of the game
     // POST: Determines if move is special (castling, en passant, pawn promotion) or normal and whether
     //       or not the move is valid.
-    bool MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window, int& gameState);
+    bool MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window, int& gameState, bool calledByPlayer);
     
+    // PRE:
+    // POST:
+    void MovePieceMarkyBot(sf::Vector2i& fromPos, sf::Vector2i toPos, bool whitesMove, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
+
+    // PRE:
+    // POST: 
+    void normalMoveMarkyBot(ChessPiece* piece, ChessPiece* destPiece, bool whitesMove, sf::Vector2i fromPos, sf::Vector2i toPos, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
+
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      board is a reference to the internal state of the Board object
     // POST: determines whether or not the opposite color king is in check
@@ -109,6 +127,10 @@ public:
     // POST:
     void addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, bool whitesMove, int gameState);
     
+    // PRE:
+    // POST: 
+    void addEnPassantToLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, bool whitesMove);
+
     // PRE: origPiece is a ChessPiece object that is not null,
     // POST: updates the most recently moved piece as the last moved piece
     //       (used for en passant).
@@ -121,12 +143,12 @@ public:
     // PRE: mousePosition is a sf::Vector2i representing where on the board a mouse click was registered
     //      windowWidth is an int representing the width of the window.
     // POST: RV is sf::Vector2i representing a square on the board.
-    sf::Vector2i GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth);
+    sf::Vector2i GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth, int windowHeight);
 
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
     // POST: RV is either true (Checkmate or check) or false (game in progress).
-    bool checkForCheckmateOrCheck(bool whitesMove, int& gameState, bool insideCheckFunction);
+    bool checkForCheckmate(bool whitesMove, int& gameState, bool insideCheckFunction);
 
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
@@ -136,7 +158,7 @@ public:
     // PRE: whitesMove is a bool that represents whos turn it is,
     //      gameState is an int representing the current state of the game.
     // POST: RV is either true (draw) or false (game in progress).
-    bool checkForDrawByInsufficientMaterial(int& gameState);
+    bool checkForDrawByInsufficientMaterial(int& gameState, bool insideCheckFunction);
 
     // PRE:
     // POST: RV = string representing the positions of pieces on the board
@@ -148,11 +170,11 @@ public:
 
     // PRE: gameState is an int representing the current state of the game.
     // POST: RV is either true (draw) or false (game in progress).
-    bool checkForDrawByRepetition(int& gameState);
+    bool checkForDrawByRepetition(int& gameState, bool insideCheckFunction);
 
     // PRE: gameState is an int representing the current state of the game.
     // POST: RV is either true (draw) or false (game in progress).
-    bool checkForDrawByFiftyMoveRule(int& gameState);
+    bool checkForDrawByFiftyMoveRule(int& gameState, bool insideCheckFunction);
 
     // PRE: window is a sf::RenderWindow which is the window where the board and pieces are displayed,
     // POST: logical display of board is displayed graphically to the window.
@@ -162,6 +184,18 @@ public:
     // POST: board's internal state is displayed to the terminal.
     //      (useful for debugging).
     void DisplayBoard(Board board);
+
+    // PRE:
+    // POST:
+    int evaluateBoard(const Board& board, bool whitesMove);
+
+    // PRE:
+    // POST:
+    int minimax(Board& board, int depth, bool whitesMove, int alpha, int beta, int gameState, sf::RenderWindow& window);
+    
+    // PRE:
+    // POST:
+    void makeBestMove(Board& board, bool &whitesMove, int depth, int gameState, sf::RenderWindow& window, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves);
 
 private:
 

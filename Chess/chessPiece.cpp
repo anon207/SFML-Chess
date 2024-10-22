@@ -118,3 +118,9 @@ void ChessPiece::setLastMoved(const bool last) {
 void ChessPiece::setJustDoubleJumped(const bool just) {
 	justDoubleJumped = just;
 }
+
+// PRE:
+// POST:
+void ChessPiece::setSquaresMoved(const int s) {
+	squaresMoved = s;
+}

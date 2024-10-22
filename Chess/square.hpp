@@ -20,6 +20,8 @@ public:
     // POST: RV = piece
     ChessPiece* GetPiece();
 
+    const ChessPiece* GetPiece() const;
+
     // PRE: piece is a ChessPiece object that is defined or nullptr.
     // POST: piece = p
     void SetPiece(ChessPiece* p);

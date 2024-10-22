@@ -7,6 +7,14 @@
 #include "king.hpp"
 #include <iostream>
 
+// GLOBAL VALUES FOR EVAL FUNCTION
+const int PAWN_VALUE = 100;
+const int KNIGHT_VALUE = 320;
+const int BISHOP_VALUE = 330;
+const int ROOK_VALUE = 500;
+const int QUEEN_VALUE = 900;
+const int KING_VALUE = 10000;
+
 // CONSTRUCTOR
 // PRE: 
 // POST: Board object created and all pieces are initilized on their starting squares.
@@ -61,6 +69,37 @@ Board::~Board() {
 
 }
 
+// Overloading the subscript operator for non-const access
+Square* Board::operator[](int row) {
+    return board[row];
+}
+
+// Overloading the subscript operator for const access
+const Square* Board::operator[](int row) const {
+    return board[row];
+}
+
+// PRE:
+// POST:
+Board& Board::operator=(Board& other) {
+    if (this == &other) {
+        return *this;
+    }
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            ChessPiece* otherPiece = other.board[row][col].GetPiece();
+            if (otherPiece != nullptr) {
+                this->board[row][col].SetPiece(otherPiece->clone()); // Clone the piece
+            }
+            else {
+                this->board[row][col].SetPiece(nullptr); // No piece, so set nullptr
+            }
+        }
+    }
+    return *this;
+}
+
 // PRE: 
 // POST: All Pieces on board are deleted and re-initilized along with
 //       lastFromPos and lastToPos being reset to (-1, -1).
@@ -91,7 +130,7 @@ void Board::resetBoard() {
 //      gameState is an int representing the current state of the game
 // POST: white pawn is promoted to one of four pieces- queen, bishop, rook, knight,
 //       or move is invalid.
-bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
+bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer) {
     if (origPiece != nullptr &&
         (origPiece->getColor() == 'W' && whitesMove == true) &&
         origPiece->getType() == "P" && fromPos != toPos &&
@@ -133,73 +172,99 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
         WhiteKnightSprite.setPosition(130, 136);
         WhiteBishopSprite.setPosition(20, 136);
 
-        // Create a new window for piece selection
-        sf::RenderWindow promotionWindow(sf::VideoMode(245, 245), "Promote Pawn", sf::Style::None);
-        promotionWindow.setPosition(sf::Vector2i((window.getPosition().x + window.getSize().x / 2) - 112,
-            (window.getPosition().y + window.getSize().y / 2) - 78));
-
-        makeWindowTransparent(promotionWindow, 210);
-
-        // Disable the main window while the promotion window is active
-        window.setActive(false);
-
         ChessPiece* selectedPiece = nullptr;
-        while (selectedPiece == nullptr) {
-            sf::Event event;
-            while (promotionWindow.pollEvent(event)) {
-                if (event.type == sf::Event::Closed) {
-                    // Prevent closing the window by any close event
-                    promotionWindow.requestFocus(); // Bring the promotion window back to focus
-                }
-                if (event.type == sf::Event::MouseButtonPressed) {
-                    // Get the global mouse position relative to the screen
-                    sf::Vector2i globalMousePos = sf::Mouse::getPosition();
 
-                    // Get the promotion window's global position and size
-                    sf::Vector2i windowPos = promotionWindow.getPosition();
-                    sf::Vector2u windowSize = promotionWindow.getSize();
+        if (calledByPlayer) {
+            // Create a new window for piece selection
+            sf::RenderWindow promotionWindow(sf::VideoMode(245, 245), "Promote Pawn", sf::Style::None);
+            promotionWindow.setPosition(sf::Vector2i((window.getPosition().x + window.getSize().x / 2) - 112,
+                (window.getPosition().y + window.getSize().y / 2) - 78));
 
-                    // Check if the click is within the promotion window's bounds
-                    if (globalMousePos.x >= windowPos.x && globalMousePos.x <= windowPos.x + static_cast<int>(windowSize.x) &&
-                        globalMousePos.y >= windowPos.y && globalMousePos.y <= windowPos.y + static_cast<int>(windowSize.y)) {
+            makeWindowTransparent(promotionWindow, 210);
 
-                        // Calculate the position relative to the promotion window
-                        sf::Vector2i mousePos = sf::Mouse::getPosition(promotionWindow);
+            // Disable the main window while the promotion window is active
 
-                        if (mousePos.x < 123 && mousePos.y < 123) {
-                            selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteQueenSprite);
-                        }
-                        else if (mousePos.x >= 123 && mousePos.y < 123) {
-                            selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteRookSprite);
-                        }
-                        else if (mousePos.x >= 123 && mousePos.y >= 123) {
-                            selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteKnightSprite);
-                        }
-                        else if (mousePos.x < 123 && mousePos.y >= 123) {
-                            selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteBishopSprite);
+            window.setActive(false);
+            while (selectedPiece == nullptr) {
+                sf::Event event;
+                while (promotionWindow.pollEvent(event)) {
+                    if (event.type == sf::Event::Closed) {
+                        // Prevent closing the window by any close event
+                        promotionWindow.requestFocus(); // Bring the promotion window back to focus
+                    }
+                    if (event.type == sf::Event::MouseButtonPressed) {
+                        // Get the global mouse position relative to the screen
+                        sf::Vector2i globalMousePos = sf::Mouse::getPosition();
+
+                        // Get the promotion window's global position and size
+                        sf::Vector2i windowPos = promotionWindow.getPosition();
+                        sf::Vector2u windowSize = promotionWindow.getSize();
+
+                        // Check if the click is within the promotion window's bounds
+                        if (globalMousePos.x >= windowPos.x && globalMousePos.x <= windowPos.x + static_cast<int>(windowSize.x) &&
+                            globalMousePos.y >= windowPos.y && globalMousePos.y <= windowPos.y + static_cast<int>(windowSize.y)) {
+
+                            // Calculate the position relative to the promotion window
+                            sf::Vector2i mousePos = sf::Mouse::getPosition(promotionWindow);
+
+                            if (mousePos.x < 123 && mousePos.y < 123) {
+                                selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteQueenSprite);
+                            }
+                            else if (mousePos.x >= 123 && mousePos.y < 123) {
+                                selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteRookSprite);
+                            }
+                            else if (mousePos.x >= 123 && mousePos.y >= 123) {
+                                selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteKnightSprite);
+                            }
+                            else if (mousePos.x < 123 && mousePos.y >= 123) {
+                                selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteBishopSprite);
+                            }
                         }
                     }
                 }
+
+                // Ensure the promotion window remains on top and active
+                promotionWindow.requestFocus();  // Request focus if the main window was clicked
+
+                // Clear and draw the promotion window
+                promotionWindow.clear(sf::Color::White);
+                promotionWindow.draw(WhiteQueenSprite);
+                promotionWindow.draw(WhiteRookSprite);
+                promotionWindow.draw(WhiteKnightSprite);
+                promotionWindow.draw(WhiteBishopSprite);
+                promotionWindow.display();
             }
 
-            // Ensure the promotion window remains on top and active
-            promotionWindow.requestFocus();  // Request focus if the main window was clicked
+            // Close the promotion window
+            promotionWindow.close();
 
-            // Clear and draw the promotion window
-            promotionWindow.clear(sf::Color::White);
-            promotionWindow.draw(WhiteQueenSprite);
-            promotionWindow.draw(WhiteRookSprite);
-            promotionWindow.draw(WhiteKnightSprite);
-            promotionWindow.draw(WhiteBishopSprite);
-            promotionWindow.display();
+            // Re-enable the main window after promotion is done
+            window.setActive(true);
+            window.requestFocus();  // Ensure the main window gets focus back
+
+            // HERE
         }
+        else {
+            // Logic for bot picking a move
+            // when the evaluation funciton is eventually made, simulate picking each of the four pieces
+            // and pick the piece with the highest (white) evaluation score.
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
+            int randomChoice = std::rand() % 4;  // Generate a random number between 0 and 3
 
-        // Close the promotion window
-        promotionWindow.close();
-
-        // Re-enable the main window after promotion is done
-        window.setActive(true);
-        window.requestFocus();  // Ensure the main window gets focus back
+            switch (randomChoice) {
+            case 0:
+                selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteQueenSprite);
+                break;
+            case 1:
+                selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteRookSprite);
+                break;
+            case 2:
+                selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteKnightSprite);
+                break;
+            case 3:
+                selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'W', WhiteBishopSprite);
+            }
+        }
 
         // Promote the pawn to the selected piece
         if (selectedPiece != nullptr) {
@@ -208,7 +273,7 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if (!checkForDrawByInsufficientMaterial(gameState) && !checkForCheckmateOrCheck(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) promoteSound.play();
+            if (!isKingInCheck(!whitesMove, board) && !checkForDrawByInsufficientMaterial(gameState, false) && !checkForCheckmate(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) promoteSound.play();
             updatePositionCounts();
             fiftyMoveCounter = 0;
             whitesMove = !whitesMove;
@@ -230,7 +295,7 @@ bool Board::checkPromotionWhite(ChessPiece* origPiece, bool& whitesMove, sf::Vec
 //      gameState is an int representing the current state of the game
 // POST: Black pawn is promoted to one of four pieces- queen, bishop, rook, knight,
 //       or move is invalid.
-bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
+bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, sf::RenderWindow& window, bool moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer) {
     if (origPiece != nullptr &&
         (origPiece->getColor() == 'B' && !whitesMove) &&
         origPiece->getType() == "P" && fromPos != toPos &&
@@ -272,73 +337,99 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
         BlackKnightSprite.setPosition(130, 136);
         BlackBishopSprite.setPosition(20, 136);
 
-        // Create a new window for piece selection
-        sf::RenderWindow promotionWindow(sf::VideoMode(245, 245), "Promote Pawn", sf::Style::None);
-        promotionWindow.setPosition(sf::Vector2i((window.getPosition().x + window.getSize().x / 2) - 112,
-            (window.getPosition().y + window.getSize().y / 2) - 78));
-
-        makeWindowTransparent(promotionWindow, 210);
-
-        // Disable the main window while the promotion window is active
-        window.setActive(false);
-
         ChessPiece* selectedPiece = nullptr;
-        while (selectedPiece == nullptr) {
-            sf::Event event;
-            while (promotionWindow.pollEvent(event)) {
-                if (event.type == sf::Event::Closed) {
-                    // Prevent closing the window by any close event
-                    promotionWindow.requestFocus(); // Bring the promotion window back to focus
-                }
-                if (event.type == sf::Event::MouseButtonPressed) {
-                    // Get the global mouse position relative to the screen
-                    sf::Vector2i globalMousePos = sf::Mouse::getPosition();
 
-                    // Get the promotion window's global position and size
-                    sf::Vector2i windowPos = promotionWindow.getPosition();
-                    sf::Vector2u windowSize = promotionWindow.getSize();
+        if (calledByPlayer) {
 
-                    // Check if the click is within the promotion window's bounds
-                    if (globalMousePos.x >= windowPos.x && globalMousePos.x <= windowPos.x + static_cast<int>(windowSize.x) &&
-                        globalMousePos.y >= windowPos.y && globalMousePos.y <= windowPos.y + static_cast<int>(windowSize.y)) {
+            // Create a new window for piece selection
+            sf::RenderWindow promotionWindow(sf::VideoMode(245, 245), "Promote Pawn", sf::Style::None);
+            promotionWindow.setPosition(sf::Vector2i((window.getPosition().x + window.getSize().x / 2) - 112,
+                (window.getPosition().y + window.getSize().y / 2) - 78));
 
-                        // Calculate the position relative to the promotion window
-                        sf::Vector2i mousePos = sf::Mouse::getPosition(promotionWindow);
+            makeWindowTransparent(promotionWindow, 210);
 
-                        if (mousePos.x < 123 && mousePos.y < 123) {
-                            selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'B', BlackQueenSprite);
-                        }
-                        else if (mousePos.x >= 123 && mousePos.y < 123) {
-                            selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'B', BlackRookSprite);
-                        }
-                        else if (mousePos.x >= 123 && mousePos.y >= 123) {
-                            selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'B', BlackKnightSprite);
-                        }
-                        else if (mousePos.x < 123 && mousePos.y >= 123) {
-                            selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'B', BlackBishopSprite);
+            // Disable the main window while the promotion window is active
+            window.setActive(false);
+
+            while (selectedPiece == nullptr) {
+                sf::Event event;
+                while (promotionWindow.pollEvent(event)) {
+                    if (event.type == sf::Event::Closed) {
+                        // Prevent closing the window by any close event
+                        promotionWindow.requestFocus(); // Bring the promotion window back to focus
+                    }
+                    if (event.type == sf::Event::MouseButtonPressed) {
+                        // Get the global mouse position relative to the screen
+                        sf::Vector2i globalMousePos = sf::Mouse::getPosition();
+
+                        // Get the promotion window's global position and size
+                        sf::Vector2i windowPos = promotionWindow.getPosition();
+                        sf::Vector2u windowSize = promotionWindow.getSize();
+
+                        // Check if the click is within the promotion window's bounds
+                        if (globalMousePos.x >= windowPos.x && globalMousePos.x <= windowPos.x + static_cast<int>(windowSize.x) &&
+                            globalMousePos.y >= windowPos.y && globalMousePos.y <= windowPos.y + static_cast<int>(windowSize.y)) {
+
+                            // Calculate the position relative to the promotion window
+                            sf::Vector2i mousePos = sf::Mouse::getPosition(promotionWindow);
+
+                            if (mousePos.x < 123 && mousePos.y < 123) {
+                                selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'B', BlackQueenSprite);
+                            }
+                            else if (mousePos.x >= 123 && mousePos.y < 123) {
+                                selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'B', BlackRookSprite);
+                            }
+                            else if (mousePos.x >= 123 && mousePos.y >= 123) {
+                                selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'B', BlackKnightSprite);
+                            }
+                            else if (mousePos.x < 123 && mousePos.y >= 123) {
+                                selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'B', BlackBishopSprite);
+                            }
                         }
                     }
                 }
+
+                // Ensure the promotion window remains on top and active
+                promotionWindow.requestFocus();  // Request focus if the main window was clicked
+
+                // Clear and draw the promotion window
+                promotionWindow.clear(sf::Color::White);
+                promotionWindow.draw(BlackQueenSprite);
+                promotionWindow.draw(BlackRookSprite);
+                promotionWindow.draw(BlackKnightSprite);
+                promotionWindow.draw(BlackBishopSprite);
+                promotionWindow.display();
             }
 
-            // Ensure the promotion window remains on top and active
-            promotionWindow.requestFocus();  // Request focus if the main window was clicked
+            // Close the promotion window
+            promotionWindow.close();
 
-            // Clear and draw the promotion window
-            promotionWindow.clear(sf::Color::White);
-            promotionWindow.draw(BlackQueenSprite);
-            promotionWindow.draw(BlackRookSprite);
-            promotionWindow.draw(BlackKnightSprite);
-            promotionWindow.draw(BlackBishopSprite);
-            promotionWindow.display();
+            // Re-enable the main window after promotion is done
+            window.setActive(true);
+            window.requestFocus();  // Ensure the main window gets focus back
+
         }
+        else {
+            // Logic for bot picking a move
+            // when the evaluation funciton is eventually made, simulate picking each of the four pieces
+            // and pick the piece with the highest (white) evaluation score.
+            std::srand(static_cast<unsigned int>(std::time(nullptr)));
+            int randomChoice = std::rand() % 4;  // Generate a random number between 0 and 3
 
-        // Close the promotion window
-        promotionWindow.close();
-
-        // Re-enable the main window after promotion is done
-        window.setActive(true);
-        window.requestFocus();  // Ensure the main window gets focus back
+            switch (randomChoice) {
+            case 0:
+                selectedPiece = new Queen(sf::Vector2i(toPos.x, toPos.y), 'B', BlackQueenSprite);
+                break;
+            case 1:
+                selectedPiece = new Rook(sf::Vector2i(toPos.x, toPos.y), 'B', BlackRookSprite);
+                break;
+            case 2:
+                selectedPiece = new Knight(sf::Vector2i(toPos.x, toPos.y), 'B', BlackKnightSprite);
+                break;
+            case 3:
+                selectedPiece = new Bishop(sf::Vector2i(toPos.x, toPos.y), 'B', BlackBishopSprite);
+            }
+        }
 
         // Promote the pawn to the selected piece
         if (selectedPiece != nullptr) {
@@ -347,7 +438,7 @@ bool Board::checkPromotionBlack(ChessPiece* origPiece, bool& whitesMove, sf::Vec
             }
             board[fromPos.x][fromPos.y].Clear();
             board[toPos.x][toPos.y].SetPiece(selectedPiece);
-            if (!checkForDrawByInsufficientMaterial(gameState) && !checkForCheckmateOrCheck(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) promoteSound.play();
+            if (!isKingInCheck(!whitesMove, board) && !checkForDrawByInsufficientMaterial(gameState, false) && !checkForCheckmate(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) promoteSound.play();
             updatePositionCounts();
             fiftyMoveCounter = 0;
             whitesMove = !whitesMove;
@@ -406,7 +497,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(7, 7);
-                    if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
+                    if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     updatePositionCounts();
                     fiftyMoveCounter++;
@@ -462,7 +553,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(7, 0);
-                        if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
+                        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         updatePositionCounts();
                         fiftyMoveCounter++;
@@ -522,7 +613,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                     whitesMove = !whitesMove;
                     lastFromPos = fromPos;
                     lastToPos = sf::Vector2i(0, 7);
-                    if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
+                    if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
                     updateLastMovedPiece(origPiece);
                     updatePositionCounts();
                     fiftyMoveCounter++;
@@ -578,7 +669,7 @@ bool Board::checkCastle(ChessPiece* origPiece, bool& whitesMove, sf::Vector2i& f
                         whitesMove = !whitesMove;
                         lastFromPos = fromPos;
                         lastToPos = sf::Vector2i(0, 0);
-                        if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
+                        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) castleSound.play();
                         updateLastMovedPiece(origPiece);
                         updatePositionCounts();
                         fiftyMoveCounter++;
@@ -664,7 +755,7 @@ bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, bool& w
         lastToPos = toPos;
         whitesMove = !whitesMove;
         
-        if (!checkForCheckmateOrCheck(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) captureSound.play();
+        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(whitesMove, gameState, false) && !checkForStalemate(whitesMove, gameState, false)) captureSound.play();
         
         updatePositionCounts();
         fiftyMoveCounter = 0;
@@ -682,7 +773,7 @@ bool Board::checkEnPassant(ChessPiece* origPiece, ChessPiece* destPiece, bool& w
 //      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
 //      gameState is an int representing the current state of the game
 // POST: Move is completed or move is invalid.
-bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState) {
+bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& whitesMove, sf::Vector2i& fromPos, sf::Vector2i& toPos, bool& moveCompleted, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves, int& gameState, bool calledByPlayer) {
     bool playCaptureSound = false;
 
     if (origPiece != nullptr &&
@@ -706,15 +797,11 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
 
         updatePositionCounts();
 
-        if (!checkForCheckmateOrCheck(whitesMove, gameState, false)) {
-            if (!checkForStalemate(whitesMove, gameState, false)) {
+        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(whitesMove, gameState, calledByPlayer)) {
+            if (!checkForStalemate(whitesMove, gameState, calledByPlayer)) {
                 if (playCaptureSound) {
                     fiftyMoveCounter = 0;
-                    if (destPiece->getType() != "Q") {
-                        captureSound.play();
-                    } else {
-                        bellSound.play();
-                    }
+                    if(!isKingInCheck(whitesMove, board)) captureSound.play();
                 }
                 else {
                     if (origPiece->getType() == "P") {
@@ -723,21 +810,19 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
                     else {
                         fiftyMoveCounter++;
                     }
-                    if (origPiece->getColor() == 'W') moveWhiteSound.play();
-                    if (origPiece->getColor() == 'B') moveBlackSound.play();
+                    if (origPiece->getColor() == 'W' && !isKingInCheck(whitesMove, board)) moveWhiteSound.play();
+                    if (origPiece->getColor() == 'B' && !isKingInCheck(whitesMove, board)) moveBlackSound.play();
                 }
-                checkForDrawByInsufficientMaterial(gameState);
-                checkForDrawByRepetition(gameState);
-                checkForDrawByFiftyMoveRule(gameState);
+                checkForDrawByInsufficientMaterial(gameState, calledByPlayer);
+                checkForDrawByRepetition(gameState, calledByPlayer);
+                checkForDrawByFiftyMoveRule(gameState, calledByPlayer);
             }
         }
-
         lastFromPos = fromPos;
         lastToPos = toPos;
 
         moveCompleted = true;
         whitesMove = !whitesMove;
-
     }
     return (moveCompleted);
 }
@@ -750,25 +835,11 @@ bool Board::checkNormalMove(ChessPiece* origPiece, ChessPiece* destPiece, bool& 
 //      gameState is an int representing the current state of the game
 // POST: Determines if move is special (castling, en passant, pawn promotion) or normal and whether
 //       or not the move is valid.
-bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window, int& gameState) {
+bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMove, sf::RenderWindow& window, int& gameState, bool calledByPlayer) {
 
     std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = getLegalMoves(whitesMove);
-    /*for (const auto& [pieceType, moves] : legalMoves) {
-        std::cout << "Piece Type: " << pieceType << std::endl;
-        if (moves.empty()) {
-            std::cout << "  No legal moves." << std::endl;
-        }
-        else {
-            for (const auto& move : moves) {
-                std::cout << "  Move to: (" << move.x << ", " << move.y << ")" << std::endl;
-            }
-        }
-    }
-
-    std::cout << fiftyMoveCounter << std::endl;*/
 
     bool moveCompleted = false;
-
     ChessPiece* origPiece = board[fromPos.x][fromPos.y].GetPiece();
     ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
 
@@ -776,14 +847,14 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
     if (checkCastle(origPiece, whitesMove, fromPos, toPos, legalMoves, gameState)) return (true);
 
     // Check for pawn promotion
-    if (checkPromotionWhite(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState) ||
-        checkPromotionBlack(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState)) return (true);
+    if (checkPromotionWhite(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState, calledByPlayer) ||
+        checkPromotionBlack(origPiece, whitesMove, fromPos, toPos, window, moveCompleted, legalMoves, gameState, calledByPlayer)) return (true);
 
     // Check for en passant
     if (checkEnPassant(origPiece, destPiece, whitesMove, fromPos, toPos, gameState)) return (true);
 
     // Check for any other move
-    moveCompleted = checkNormalMove(origPiece, destPiece, whitesMove, fromPos, toPos, moveCompleted, legalMoves, gameState);
+    moveCompleted = checkNormalMove(origPiece, destPiece, whitesMove, fromPos, toPos, moveCompleted, legalMoves, gameState, calledByPlayer);
 
     if (!moveCompleted) {
         invalidMoveSound.play();
@@ -792,6 +863,35 @@ bool Board::MovePiece(sf::Vector2i& fromPos, sf::Vector2i toPos, bool& whitesMov
     }
 
     return (moveCompleted);
+}
+
+// PRE:
+// POST:
+void Board::MovePieceMarkyBot(sf::Vector2i& fromPos, sf::Vector2i toPos, bool whitesMove, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) {
+    ChessPiece* piece = board[fromPos.x][fromPos.y].GetPiece();
+    ChessPiece* destPiece = board[toPos.x][toPos.y].GetPiece();
+
+    // Check for castling
+    //if (checkCastle(origPiece, whitesMove, fromPos, toPos, legalMoves, gameState)) return (true);
+
+    // Check for en passant
+    //if (checkEnPassant(origPiece, destPiece, whitesMove, fromPos, toPos, gameState)) return (true);
+
+    // Check for any other move
+    if(piece->validateMove(toPos, board, legalMoves)) normalMoveMarkyBot(piece, destPiece, whitesMove, fromPos, toPos, legalMoves);
+}
+
+// PRE:
+// POST: 
+void Board::normalMoveMarkyBot(ChessPiece* piece, ChessPiece* destPiece, bool whitesMove, sf::Vector2i fromPos, sf::Vector2i toPos, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) {
+
+    piece->setPosition(toPos);
+    board[toPos.x][toPos.y].SetPiece(piece);
+    board[fromPos.x][fromPos.y].Clear();
+
+    updateLastMovedPiece(piece);
+
+    updatePositionCounts();
 }
 
 // PRE: whitesMove is a bool that represents whos turn it is,
@@ -846,7 +946,7 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
         if (board[7][7].GetPiece() != nullptr && board[7][7].GetPiece()->getType() == "R" &&
             board[7][7].GetPiece()->getColor() == 'W' && !board[7][7].GetPiece()->getHasMoved() &&
             board[7][6].GetPiece() == nullptr && board[7][5].GetPiece() == nullptr) {
-
+            
             // Check if the king would be moving through check or not
             bool passedFirstCheck = false;
             bool passedSecondCheck = false;
@@ -870,19 +970,28 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
                     rook->setPosition(sf::Vector2i(7, 5));
                     whiteKing->setPosition(sf::Vector2i(7, 6));
 
-                    if (!checkForCheckmateOrCheck(!whitesMove, gameState, true) && !checkForStalemate(!whitesMove, gameState, true)) {
+                    if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, true) && !checkForStalemate(!whitesMove, gameState, true)) {
+                        board[7][5].Clear();
+                        board[7][7].SetPiece(rook);
+                        board[7][6].Clear();
+                        board[7][4].SetPiece(whiteKing);
+
+                        rook->setPosition(sf::Vector2i(7, 7));
+                        whiteKing->setPosition(sf::Vector2i(7, 4));
+
                         std::string posKey = whiteKing->getType() + std::to_string(whiteKing->getPosition().x) + std::to_string(whiteKing->getPosition().y);
                         legalMoves[posKey].push_back(sf::Vector2i(7, 6));
                         legalMoves[posKey].push_back(sf::Vector2i(7, 7));
                     }
+                    else {
+                        board[7][5].Clear();
+                        board[7][7].SetPiece(rook);
+                        board[7][6].Clear();
+                        board[7][4].SetPiece(whiteKing);
 
-                    board[7][5].Clear();
-                    board[7][7].SetPiece(rook);
-                    board[7][6].Clear();
-                    board[7][4].SetPiece(whiteKing);
-
-                    rook->setPosition(sf::Vector2i(7, 7));
-                    whiteKing->setPosition(sf::Vector2i(7, 4));
+                        rook->setPosition(sf::Vector2i(7, 7));
+                        whiteKing->setPosition(sf::Vector2i(7, 4));
+                    }
                 }
             }
             if (!passedFirstCheck) {
@@ -926,21 +1035,29 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
                         rook->setPosition(sf::Vector2i(7, 3));
                         whiteKing->setPosition(sf::Vector2i(7, 2));
 
-                        if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) {
+                        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) {
+                            board[7][3].Clear();
+                            board[7][0].SetPiece(rook);
+                            board[7][2].Clear();
+                            board[7][4].SetPiece(whiteKing);
+
+                            rook->setPosition(sf::Vector2i(7, 0));
+                            whiteKing->setPosition(sf::Vector2i(7, 4));
+                            
                             std::string posKey = whiteKing->getType() + std::to_string(whiteKing->getPosition().x) + std::to_string(whiteKing->getPosition().y);
                             legalMoves[posKey].push_back(sf::Vector2i(7, 0));
                             legalMoves[posKey].push_back(sf::Vector2i(7, 1));
                             legalMoves[posKey].push_back(sf::Vector2i(7, 2));
                         }
+                        else {
+                            board[7][3].Clear();
+                            board[7][0].SetPiece(rook);
+                            board[7][2].Clear();
+                            board[7][4].SetPiece(whiteKing);
 
-                        board[7][3].Clear();
-                        board[7][0].SetPiece(rook);
-                        board[7][2].Clear();
-                        board[7][4].SetPiece(whiteKing);
-
-                        rook->setPosition(sf::Vector2i(7, 0));
-                        whiteKing->setPosition(sf::Vector2i(7, 4));
-
+                            rook->setPosition(sf::Vector2i(7, 0));
+                            whiteKing->setPosition(sf::Vector2i(7, 4));
+                        }
                     }
                 }
             }
@@ -989,19 +1106,28 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
                     rook->setPosition(sf::Vector2i(0, 5));
                     blackKing->setPosition(sf::Vector2i(0, 6));
 
-                    if (!checkForCheckmateOrCheck(!whitesMove, gameState, true) && !checkForStalemate(!whitesMove, gameState, true)) {
+                    if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, true) && !checkForStalemate(!whitesMove, gameState, true)) {
+                        board[0][5].Clear();
+                        board[0][7].SetPiece(rook);
+                        board[0][6].Clear();
+                        board[0][4].SetPiece(blackKing);
+
+                        rook->setPosition(sf::Vector2i(0, 7));
+                        blackKing->setPosition(sf::Vector2i(0, 4));
+                        
                         std::string posKey = blackKing->getType() + std::to_string(blackKing->getPosition().x) + std::to_string(blackKing->getPosition().y);
                         legalMoves[posKey].push_back(sf::Vector2i(0, 6));
                         legalMoves[posKey].push_back(sf::Vector2i(0, 7));
                     }
+                    else {
+                        board[0][5].Clear();
+                        board[0][7].SetPiece(rook);
+                        board[0][6].Clear();
+                        board[0][4].SetPiece(blackKing);
 
-                    board[0][5].Clear();
-                    board[0][7].SetPiece(rook);
-                    board[0][6].Clear();
-                    board[0][4].SetPiece(blackKing);
-
-                    rook->setPosition(sf::Vector2i(0, 7));
-                    blackKing->setPosition(sf::Vector2i(0, 4));
+                        rook->setPosition(sf::Vector2i(0, 7));
+                        blackKing->setPosition(sf::Vector2i(0, 4));
+                    }
                 }
             }
             if (!passedFirstCheck) {
@@ -1045,21 +1171,29 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
                         rook->setPosition(sf::Vector2i(0, 3));
                         blackKing->setPosition(sf::Vector2i(0, 2));
 
-                        if (!checkForCheckmateOrCheck(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) {
+                        if (!isKingInCheck(!whitesMove, board) && !checkForCheckmate(!whitesMove, gameState, false) && !checkForStalemate(!whitesMove, gameState, false)) {
+                            board[0][3].Clear();
+                            board[0][0].SetPiece(rook);
+                            board[0][2].Clear();
+                            board[0][4].SetPiece(blackKing);
+
+                            rook->setPosition(sf::Vector2i(0, 0));
+                            blackKing->setPosition(sf::Vector2i(0, 4));
+
                             std::string posKey = blackKing->getType() + std::to_string(blackKing->getPosition().x) + std::to_string(blackKing->getPosition().y);
                             legalMoves[posKey].push_back(sf::Vector2i(0, 0));
                             legalMoves[posKey].push_back(sf::Vector2i(0, 1));
                             legalMoves[posKey].push_back(sf::Vector2i(0, 2));
                         }
+                        else {
+                            board[0][3].Clear();
+                            board[0][0].SetPiece(rook);
+                            board[0][2].Clear();
+                            board[0][4].SetPiece(blackKing);
 
-                        board[0][3].Clear();
-                        board[0][0].SetPiece(rook);
-                        board[0][2].Clear();
-                        board[0][4].SetPiece(blackKing);
-
-                        rook->setPosition(sf::Vector2i(0, 0));
-                        blackKing->setPosition(sf::Vector2i(0, 4));
-
+                            rook->setPosition(sf::Vector2i(0, 0));
+                            blackKing->setPosition(sf::Vector2i(0, 4));
+                        }
                     }
                 }
             }
@@ -1075,6 +1209,104 @@ void Board::addCastlingToLegalMoves(std::unordered_map<std::string, std::vector<
                 board[0][1].Clear();
                 board[0][4].SetPiece(blackKing);
             }
+        }
+    }
+}
+
+// PRE:
+// POST:
+void Board::addEnPassantToLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, bool whitesMove) {
+    
+    ChessPiece* piece = nullptr;
+    
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            if (board[row][col].GetPiece() != nullptr &&
+                board[row][col].GetPiece()->getType() == "P" &&
+                board[row][col].GetPiece()->getLastMoved() &&
+                board[row][col].GetPiece()->getJustDoubleJumped() &&
+                board[row][col].GetPiece()->getSquaresMoved() == 2) {
+                piece = board[row][col].GetPiece();
+            }
+        }
+    }
+    
+    if (piece != nullptr && piece->getColor() == 'B' && whitesMove) {
+        // Black pawn found that satisfies all en passant conditions
+        // Now check if there is a white pawn adjacent to it.
+        if (piece->getPosition().y != 0 &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece() != nullptr &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece()->getType() == "P" &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece()->getColor() == 'W') {
+            
+            // check if king would be in check after en passant is played
+            ChessPiece* whiteP = board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece();
+            board[piece->getPosition().x][piece->getPosition().y].Clear();
+            board[piece->getPosition().x][piece->getPosition().y - 1].Clear();
+            board[piece->getPosition().x - 1][piece->getPosition().y + 1].SetPiece(whiteP);
+            if (!isKingInCheck(!whitesMove, board)) {
+                std::string posKey = "P" + std::to_string(piece->getPosition().x) + std::to_string(piece->getPosition().y - 1);
+                legalMoves[posKey].push_back(sf::Vector2i(piece->getPosition().x - 1, piece->getPosition().y));
+            }
+            board[piece->getPosition().x][piece->getPosition().y].SetPiece(piece);
+            board[piece->getPosition().x][piece->getPosition().y - 1].SetPiece(whiteP);
+            board[piece->getPosition().x - 1][piece->getPosition().y + 1].Clear();
+        }
+        if (piece->getPosition().y != 7 &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece() != nullptr &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece()->getType() == "P" &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece()->getColor() == 'W') {
+            
+            ChessPiece* whiteP = board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece();
+            board[piece->getPosition().x][piece->getPosition().y].Clear();
+            board[piece->getPosition().x][piece->getPosition().y + 1].Clear();
+            board[piece->getPosition().x - 1][piece->getPosition().y - 1].SetPiece(whiteP);
+            if (!isKingInCheck(!whitesMove, board)) {
+                std::string posKey = "P" + std::to_string(piece->getPosition().x) + std::to_string(piece->getPosition().y + 1);
+                legalMoves[posKey].push_back(sf::Vector2i(piece->getPosition().x - 1, piece->getPosition().y));
+            }
+            board[piece->getPosition().x][piece->getPosition().y].SetPiece(piece);
+            board[piece->getPosition().x][piece->getPosition().y + 1].SetPiece(whiteP);
+            board[piece->getPosition().x - 1][piece->getPosition().y - 1].Clear();
+        }
+    }
+
+    if (piece != nullptr && piece->getColor() == 'W' && !whitesMove) {
+        // White pawn found that satisfies all en passant conditions
+        // Now check if there is a black pawn adjacent to it.
+        if (piece->getPosition().y != 0 &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece() != nullptr &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece()->getType() == "P" &&
+            board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece()->getColor() == 'B') {
+            
+            ChessPiece* blackP = board[piece->getPosition().x][piece->getPosition().y - 1].GetPiece();
+            board[piece->getPosition().x][piece->getPosition().y].Clear();
+            board[piece->getPosition().x][piece->getPosition().y - 1].Clear();
+            board[piece->getPosition().x + 1][piece->getPosition().y + 1].SetPiece(blackP);
+            if (!isKingInCheck(!whitesMove, board)) {
+                std::string posKey = "P" + std::to_string(piece->getPosition().x) + std::to_string(piece->getPosition().y - 1);
+                legalMoves[posKey].push_back(sf::Vector2i(piece->getPosition().x + 1, piece->getPosition().y));
+            }
+            board[piece->getPosition().x][piece->getPosition().y].SetPiece(piece);
+            board[piece->getPosition().x][piece->getPosition().y - 1].SetPiece(blackP);
+            board[piece->getPosition().x + 1][piece->getPosition().y + 1].Clear();
+        }
+        if (piece->getPosition().y != 7 &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece() != nullptr &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece()->getType() == "P" &&
+            board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece()->getColor() == 'B') {
+            
+            ChessPiece* blackP = board[piece->getPosition().x][piece->getPosition().y + 1].GetPiece();
+            board[piece->getPosition().x][piece->getPosition().y].Clear();
+            board[piece->getPosition().x][piece->getPosition().y + 1].Clear();
+            board[piece->getPosition().x + 1][piece->getPosition().y - 1].SetPiece(blackP);
+            if (!isKingInCheck(!whitesMove, board)) {
+                std::string posKey = "P" + std::to_string(piece->getPosition().x) + std::to_string(piece->getPosition().y + 1);
+                legalMoves[posKey].push_back(sf::Vector2i(piece->getPosition().x + 1, piece->getPosition().y));
+            }
+            board[piece->getPosition().x][piece->getPosition().y].SetPiece(piece);
+            board[piece->getPosition().x][piece->getPosition().y + 1].SetPiece(blackP);
+            board[piece->getPosition().x + 1][piece->getPosition().y - 1].Clear();
         }
     }
 }
@@ -1105,11 +1337,12 @@ ChessPiece* Board::GetPiece(sf::Vector2i piecePos) {
 // PRE: mousePosition is a sf::Vector2i representing where on the board a mouse click was registered
 //      windowWidth is an int representing the width of the window.
 // POST: RV is sf::Vector2i representing a square on the board.
-sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth) {
-    int cellSize = windowWidth / 8;
+sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int windowWidth, int windowHeight) {
+    int cellWidth = windowWidth / 8;
+    int cellHeight = windowHeight / 8;
 
-    int col = mousePosition.x / cellSize;
-    int row = mousePosition.y / cellSize;
+    int col = mousePosition.x / cellWidth;
+    int row = mousePosition.y / cellHeight;
 
     return sf::Vector2i(row, col);
 }
@@ -1117,7 +1350,7 @@ sf::Vector2i Board::GetBoardPosition(const sf::Vector2i& mousePosition, int wind
 // PRE: whitesMove is a bool that represents whos turn it is,
 //      gameState is an int representing the current state of the game.
 // POST: RV is either true (Checkmate or check) or false (game in progress).
-bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState, bool insideCheckFunction) {
+bool Board::checkForCheckmate(bool whitesMove, int& gameState, bool insideCheckFunction) {
     std::unordered_map<std::string, std::vector<sf::Vector2i>> otherColorLegalMoves = getLegalMoves(!whitesMove);
 
     if (isKingInCheck(whitesMove, board)) {
@@ -1136,15 +1369,16 @@ bool Board::checkForCheckmateOrCheck(bool whitesMove, int& gameState, bool insid
                 checkSound.play();
                 gameEndSound.play();
             }
+            return true;
         }
         else {
             if (!insideCheckFunction) {
                 checkSound.play();
             }
+            return false;
         }
-        return (true);
     }
-    return (false);
+    return false;
 }
 
 // PRE: whitesMove is a bool that represents whos turn it is,
@@ -1177,7 +1411,7 @@ bool Board::checkForStalemate(bool whitesMove, int& gameState, bool insideCheckF
 // PRE: whitesMove is a bool that represents whos turn it is,
 //      gameState is an int representing the current state of the game.
 // POST: RV is either true (draw) or false (game in progress).
-bool Board::checkForDrawByInsufficientMaterial(int& gameState) {
+bool Board::checkForDrawByInsufficientMaterial(int& gameState, bool insideCheckFunction) {
 
     std::unordered_map<std::string, int> whitePieces;
     std::unordered_map<std::string, int> blackPieces;
@@ -1288,7 +1522,7 @@ void Board::updatePositionCounts() {
 
 // PRE: gameState is an int representing the current state of the game.
 // POST: RV is either true (draw) or false (game in progress).
-bool Board::checkForDrawByRepetition(int& gameState) {
+bool Board::checkForDrawByRepetition(int& gameState, bool insideCheckFunction) {
     std::string currentState = generateBoardState();
     auto it = positionCounts.find(currentState);
     if (it != positionCounts.end() && it->second >= 3) {
@@ -1301,7 +1535,7 @@ bool Board::checkForDrawByRepetition(int& gameState) {
 
 // PRE: gameState is an int representing the current state of the game.
 // POST: RV is either true (draw) or false (game in progress).
-bool Board::checkForDrawByFiftyMoveRule(int& gameState) {
+bool Board::checkForDrawByFiftyMoveRule(int& gameState, bool insideCheckFunction) {
     if (fiftyMoveCounter >= 100) {
         gameState = 5;
         gameEndSound.play();
@@ -1401,7 +1635,7 @@ void Board::InitializePieces() {
         board[0][i].SetPiece(new Rook(sf::Vector2i(0, i), 'B', BlackRookSprite));
         board[7][i].SetPiece(new Rook(sf::Vector2i(7, i), 'W', WhiteRookSprite));
     }
-
+    
     // Initialize Knights
     sf::Sprite WhiteKnightSprite;
     WhiteKnightSprite.setTexture(pieceTexture);
@@ -1444,7 +1678,7 @@ void Board::InitializePieces() {
     BlackQueenSprite.setScale(0.34f, 0.34f);
     board[0][3].SetPiece(new Queen(sf::Vector2i(0, 3), 'B', BlackQueenSprite));
     board[7][3].SetPiece(new Queen(sf::Vector2i(7, 3), 'W', WhiteQueenSprite));
-
+    
     // Initialize Kings
     sf::Sprite WhiteKingSprite;
     WhiteKingSprite.setTexture(pieceTexture);
@@ -1470,4 +1704,144 @@ void Board::makeWindowTransparent(sf::RenderWindow& window, BYTE transparency) {
     HWND hwnd = window.getSystemHandle();
     SetWindowLong(hwnd, GWL_EXSTYLE, GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
     SetLayeredWindowAttributes(hwnd, 0, transparency, LWA_ALPHA);
+}
+
+// PRE:
+// POST:
+int Board::evaluateBoard(const Board& board, bool whitesMove) {
+    int score = 0;
+
+    for (int row = 0; row < 8; row++) {
+        for (int col = 0; col < 8; col++) {
+            const ChessPiece* piece = board[row][col].GetPiece();
+            if (piece != nullptr) {
+                int pieceScore = 0;
+
+                // Assign value based on piece type
+                if (piece->getType() == "P") pieceScore = PAWN_VALUE;
+                else if (piece->getType() == "N") pieceScore = KNIGHT_VALUE;
+                else if (piece->getType() == "B") pieceScore = BISHOP_VALUE;
+                else if (piece->getType() == "R") pieceScore = ROOK_VALUE;
+                else if (piece->getType() == "Q") pieceScore = QUEEN_VALUE;
+                else if (piece->getType() == "K") pieceScore = KING_VALUE;
+
+                // Adjust score based on piece color
+                if (piece->getColor() == 'W' && whitesMove) score -= pieceScore;
+                if (piece->getColor() == 'B' && !whitesMove) score += pieceScore;
+            }
+        }
+    }
+    return score; // Flip score if black
+}
+
+int Board::minimax(Board& board, int depth, bool whitesMove, int alpha, int beta, int gameState, sf::RenderWindow &window) {
+    if (depth == 0 || checkForCheckmate(whitesMove, gameState, true) || 
+        checkForStalemate(whitesMove, gameState, true) || 
+        checkForDrawByRepetition(gameState, true) ||
+        checkForDrawByInsufficientMaterial(gameState, true) ||
+        checkForDrawByFiftyMoveRule(gameState, true)) {
+        return evaluateBoard(board, whitesMove); // Return evaluation of board
+    }
+    if (whitesMove) {
+        int maxEval = std::numeric_limits<int>::min();
+        std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = board.getLegalMoves(true);
+        board.addCastlingToLegalMoves(legalMoves, whitesMove, gameState);
+        board.addEnPassantToLegalMoves(legalMoves, whitesMove);
+
+        for (const auto& entry : legalMoves) {
+            const std::string& piecePos = entry.first;
+            const std::vector<sf::Vector2i>& moves = entry.second;
+
+            std::string xStr = piecePos.substr(piecePos.length() - 2, 1);
+            std::string yStr = piecePos.substr(piecePos.length() - 1, 1);
+
+            int x = std::stoi(xStr);
+            int y = std::stoi(yStr);
+
+
+            sf::Vector2i startPos(x, y);
+
+            // Try all moves for the current piece
+            for (const sf::Vector2i& move : moves) {
+                Board tempBoard;
+                tempBoard = board; // Make a copy of the board
+                tempBoard.MovePieceMarkyBot(startPos, move, whitesMove, legalMoves);
+
+                int eval = minimax(tempBoard, depth - 1, false, alpha, beta, gameState, window);
+                maxEval = std::max(maxEval, eval);
+                alpha = std::max(alpha, eval);
+
+                if (beta <= alpha) break; // Beta cut-off
+            }
+        }
+        return maxEval;
+    }
+    else {
+        int minEval = std::numeric_limits<int>::max();
+        std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves = board.getLegalMoves(false);
+        board.addCastlingToLegalMoves(legalMoves, whitesMove, gameState);
+        board.addEnPassantToLegalMoves(legalMoves, whitesMove);
+
+        for (const auto& entry : legalMoves) {
+            const std::string& piecePos = entry.first;
+            const std::vector<sf::Vector2i>& moves = entry.second;
+
+            std::string xStr = piecePos.substr(piecePos.length() - 2, 1);
+            std::string yStr = piecePos.substr(piecePos.length() - 1, 1);
+
+            int x = std::stoi(xStr);
+            int y = std::stoi(yStr);
+
+
+            sf::Vector2i startPos(x, y);
+
+            for (const sf::Vector2i& move : moves) {
+                Board tempBoard;
+                tempBoard = board;
+                tempBoard.MovePieceMarkyBot(startPos, move, whitesMove, legalMoves);
+
+                int eval = minimax(tempBoard, depth - 1, true, alpha, beta, gameState, window);
+                minEval = std::min(minEval, eval);
+                beta = std::min(beta, eval);
+
+                if (beta <= alpha) break;
+            }
+        }
+        return minEval;
+    }
+}
+
+// Function to make the best move using Minimax
+void Board::makeBestMove(Board& board, bool &whitesMove, int depth, int gameState, sf::RenderWindow &window, std::unordered_map<std::string, std::vector<sf::Vector2i>> legalMoves) {
+    std::pair<sf::Vector2i, sf::Vector2i> bestMove;
+    int bestValue = whitesMove ? std::numeric_limits<int>::min() : std::numeric_limits<int>::max();
+
+    for (const auto& entry : legalMoves) {
+        const std::string& piecePos = entry.first;
+        const std::vector<sf::Vector2i>& moves = entry.second;
+
+        std::string xStr = piecePos.substr(piecePos.length() - 2, 1);
+        std::string yStr = piecePos.substr(piecePos.length() - 1, 1);
+
+        int x = std::stoi(xStr);
+        int y = std::stoi(yStr);
+
+        sf::Vector2i startPos(x, y);
+        for (const sf::Vector2i& move : moves) {
+            Board tempBoard;
+            tempBoard = board;
+            tempBoard.MovePieceMarkyBot(startPos, move, whitesMove, legalMoves);
+
+            int boardValue = minimax(tempBoard, depth - 1, whitesMove, std::numeric_limits<int>::min(), std::numeric_limits<int>::max(), gameState, window);
+            if (whitesMove && boardValue > bestValue) {
+                bestValue = boardValue;
+                bestMove = { startPos, move };
+            }
+            else if (!whitesMove && boardValue < bestValue) {
+                bestValue = boardValue;
+                bestMove = { startPos, move };
+            }
+        }
+    }
+    board.MovePiece(bestMove.first, bestMove.second, whitesMove, window, gameState, true);
 }

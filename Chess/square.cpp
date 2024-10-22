@@ -20,6 +20,10 @@ ChessPiece* Square::GetPiece() {
     return (piece);
 }
 
+const ChessPiece* Square::GetPiece() const {
+    return (piece);
+}
+
 // PRE: piece is a ChessPiece object that is defined or nullptr.
 // POST: piece = p
 void Square::SetPiece(ChessPiece* p) {

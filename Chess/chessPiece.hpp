@@ -86,6 +86,10 @@ public:
     // PRE: just is a boolean value
     // POST: justDoubleJumped = just
     void setJustDoubleJumped(const bool just);
+
+    // PRE:
+    // POST:
+    void setSquaresMoved(const int s);
     
     // PRE: moveToPosition is an sf::Vector2i representing the position the piece is trying to move to
     //      board is a 8 x 8 matrix of Square objects representing the chess board.
@@ -104,6 +108,10 @@ public:
     //      iff its blacks turn.
     // POST: legalMoves now contains all the legal moves of the ChessPiece type object.
     virtual void allLegalMoves(std::unordered_map<std::string, std::vector<sf::Vector2i>>& legalMoves, Square (&board)[8][8], bool whitesMove) const = 0;
+
+    // PRE:
+    // POST:
+    virtual ChessPiece* clone() const = 0;
 
 protected:
 

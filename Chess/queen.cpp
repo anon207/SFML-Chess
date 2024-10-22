@@ -21,6 +21,12 @@ Queen::~Queen() {
 
 }
 
+// PRE:
+// POST:
+ChessPiece* Queen::clone() const {
+	return new Queen(*this);
+}
+
 // PRE: moveToPosition is an sf::Vector2i representing the position the piece is trying to move to
 //      board is a 8 x 8 matrix of Square objects representing the chess board.
 //      legalMoves is a hashmap of all the legal moves of whoever's turn it is,
